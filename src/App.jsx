@@ -1,11 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './components/Layout/MainLayout';
 import ComputersPage from './pages/Computers';
+import UsersPage from './pages/Users';
 
 // Заглушки для остальных страниц
 const Dashboard = () => <div>Дашборд (в разработке)</div>;
 const Sales = () => <div>Продажи (в разработке)</div>;
-const Users = () => <div>Пользователи (в разработке)</div>;
 const Logs = () => <div>Логи (в разработке)</div>;
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/computers" element={<ComputersPage />} />
         <Route path="/sales" element={<Sales />} />
-        <Route path="/users" element={<Users />} />
+        <Route path="/users" element={<UsersPage />} />
         <Route path="/logs" element={<Logs />} />
       </Routes>
     </MainLayout>
