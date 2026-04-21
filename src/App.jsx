@@ -3,10 +3,10 @@ import MainLayout from './components/Layout/MainLayout';
 import ComputersPage from './pages/Computers';
 import UsersPage from './pages/Users';
 import SalesPage from './pages/Sales';
+import LogsPage from './pages/Logs';
 
-// Заглушки
+// Заглушка для дашборда
 const Dashboard = () => <div>Дашборд (в разработке)</div>;
-const Logs = () => <div>Логи (в разработке)</div>;
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
         <Route path="/computers" element={<ComputersPage />} />
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/users" element={<UsersPage />} />
-        <Route path="/logs" element={<Logs />} />
+        <Route path="/logs" element={<LogsPage />} />
       </Routes>
     </MainLayout>
   );
