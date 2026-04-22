@@ -31,6 +31,7 @@ import {
   fetchZones,
   endSession,
   setSelectedZone,
+  setSelectedStatus,
   tickBalance,
   setMaintenance,
   setFree,
@@ -41,8 +42,16 @@ const { Option } = Select;
 
 function ComputersPage() {
   const dispatch = useDispatch();
-  const { items: computers, zones, selectedZone, isLoading, error } = useSelector(state => state.computers);
   
+  const {
+  items: computers,
+  zones,
+  selectedZone,
+  selectedStatus,
+  isLoading,
+  error,
+} = useSelector(state => state.computers);
+
   const [startModalVisible, setStartModalVisible] = useState(false);
   const [selectedComputer, setSelectedComputer] = useState(null);
   const tickInterval = useRef(null);
@@ -65,10 +74,19 @@ function ComputersPage() {
   }, [dispatch]);
 
   // Фильтрация компьютеров по зоне
-  const filteredComputers = useMemo(() => {
-    if (!selectedZone) return computers;
-    return computers.filter(computer => computer.zone_id === selectedZone);
-  }, [computers, selectedZone]);
+const filteredComputers = useMemo(() => {
+  let filtered = computers;
+
+  if (selectedZone) {
+    filtered = filtered.filter(computer => computer.zone_id === selectedZone);
+  }
+
+  if (selectedStatus) {
+    filtered = filtered.filter(computer => computer.status === selectedStatus);
+  }
+
+  return filtered;
+}, [computers, selectedZone, selectedStatus]);
 
   // Статистика (без "Всего ПК")
   const stats = useMemo(() => {
@@ -164,13 +182,25 @@ function ComputersPage() {
 
 // Колонки таблицы
 const columns = [
-  {
-    title: '№ ПК',
-    dataIndex: 'number',
-    key: 'number',
-    width: 70,
-    sorter: (a, b) => a.number - b.number,
-  },
+{
+  title: '№ ПК',
+  dataIndex: 'number',
+  key: 'number',
+  width: 80,
+  sorter: (a, b) => a.number - b.number,
+  render: (number) => (
+    <span style={{ 
+      fontSize: 16, 
+      fontWeight: 700,
+      color: '#1677ff',
+      background: '#e6f4ff',
+      padding: '4px 10px',
+      borderRadius: 8,
+    }}>
+      {number}
+    </span>
+  ),
+},
   {
     title: 'Зона',
     dataIndex: ['zones', 'name'],
@@ -421,24 +451,37 @@ const columns = [
         </Col>
       </Row>
 
-      {/* Фильтр по зонам */}
-      <Card style={{ marginBottom: 16 }}>
-        <Space>
-          <FilterOutlined />
-          <span>Фильтр по зоне:</span>
-          <Select
-            style={{ width: 200 }}
-            placeholder="Все зоны"
-            allowClear
-            value={selectedZone}
-            onChange={(value) => dispatch(setSelectedZone(value))}
-          >
-            {zones.map(zone => (
-              <Option key={zone.id} value={zone.id}>{zone.name}</Option>
-            ))}
-          </Select>
-        </Space>
-      </Card>
+{/* Фильтр по зонам и статусу */}
+<Card style={{ marginBottom: 16 }}>
+  <Space wrap>
+    <FilterOutlined />
+    <span>Зона:</span>
+    <Select
+      style={{ width: 180 }}
+      placeholder="Все зоны"
+      allowClear
+      value={selectedZone}
+      onChange={(value) => dispatch(setSelectedZone(value))}
+    >
+      {zones.map(zone => (
+        <Option key={zone.id} value={zone.id}>{zone.name}</Option>
+      ))}
+    </Select>
+
+    <span style={{ marginLeft: 16 }}>Статус:</span>
+    <Select
+      style={{ width: 180 }}
+      placeholder="Все статусы"
+      allowClear
+      value={selectedStatus}
+      onChange={(value) => dispatch(setSelectedStatus(value))}
+    >
+      <Option value="Свободен">🟢 Свободен</Option>
+      <Option value="Занят">🔴 Занят</Option>
+      <Option value="Обслуживание">🟡 Обслуживание</Option>
+    </Select>
+  </Space>
+</Card>
 
       {/* Таблица */}
       <Card>

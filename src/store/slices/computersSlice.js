@@ -257,12 +257,16 @@ const computersSlice = createSlice({
     zones: [],
     users: [],
     selectedZone: null,
+    selectedStatus: null,  // ← ДОБАВИТЬ
     isLoading: false,
     error: null,
   },
   reducers: {
     setSelectedZone: (state, action) => {
       state.selectedZone = action.payload;
+    },
+    setSelectedStatus: (state, action) => {  // ← ДОБАВИТЬ
+      state.selectedStatus = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -291,5 +295,5 @@ const computersSlice = createSlice({
   },
 });
 
-export const { setSelectedZone, clearError } = computersSlice.actions;
+export const { setSelectedZone, setSelectedStatus, clearError } = computersSlice.actions;
 export default computersSlice.reducer;
