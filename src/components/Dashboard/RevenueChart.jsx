@@ -7,13 +7,12 @@ import locale from 'antd/es/date-picker/locale/ru_RU';
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const PERIODS = { today: 'Сегодня', week: 'Неделя', month: 'Месяц', year: 'Год' };
+const PERIODS = { week: 'Неделя', month: 'Месяц', year: 'Год' };
 
 // Кастомный тултип
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
 
-  // Считаем общую сумму для этой точки
   const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
 
   return (
@@ -64,9 +63,6 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
     if (intervalType === 'day') {
       return d.diff(startDate, 'day');
     }
-    if (intervalType === 'week') {
-      return Math.floor(d.diff(startDate, 'day') / 7);
-    }
     if (intervalType === 'month') {
       return d.diff(startDate, 'month');
     }
@@ -81,23 +77,20 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
       endDate = dayjs(customRange[1]).endOf('day');
       const days = endDate.diff(startDate, 'day') + 1;
       
-      if (days <= 7) intervalType = 'day';
-      else if (days <= 60) intervalType = 'week';
+      if (days <= 31) intervalType = 'day';
       else intervalType = 'month';
     } else {
       const now = dayjs();
       endDate = now.endOf('day');
       
-      if (period === 'today') {
-        startDate = now.startOf('day');
-        intervalType = 'day';
-      } else if (period === 'week') {
+      if (period === 'week') {
         startDate = now.subtract(6, 'day').startOf('day');
         intervalType = 'day';
       } else if (period === 'month') {
         startDate = now.subtract(29, 'day').startOf('day');
-        intervalType = 'week';
+        intervalType = 'day';
       } else {
+        // year
         startDate = now.subtract(11, 'month').startOf('month');
         intervalType = 'month';
       }
@@ -112,13 +105,8 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
         labelArray.push(current.format('DD.MM'));
         current = current.add(1, 'day');
       }
-    } else if (intervalType === 'week') {
-      let weekNum = 1;
-      while (current.isBefore(endDate)) {
-        labelArray.push(`Нед ${weekNum++}`);
-        current = current.add(1, 'week');
-      }
     } else {
+      // month
       while (current.isBefore(endDate) || current.isSame(endDate, 'month')) {
         labelArray.push(current.format('MMM YY'));
         current = current.add(1, 'month');
@@ -227,10 +215,10 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
             <YAxis />
             <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Bar dataKey="salesCash" name="Продажи нал" fill="#52c41a" stackId="sales" />
-            <Bar dataKey="salesCard" name="Продажи карта" fill="#1677ff" stackId="sales" />
-            <Bar dataKey="refillCash" name="Пополнения нал" fill="#95de64" stackId="refill" />
-            <Bar dataKey="refillCard" name="Пополнения карта" fill="#69b1ff" stackId="refill" />
+            <Bar dataKey="salesCash" name="Продажи нал" fill="#52c41a" stackId="revenue" />
+            <Bar dataKey="salesCard" name="Продажи карта" fill="#1677ff" stackId="revenue" />
+            <Bar dataKey="refillCash" name="Пополнения нал" fill="#95de64" stackId="revenue" />
+            <Bar dataKey="refillCard" name="Пополнения карта" fill="#69b1ff" stackId="revenue" />
           </BarChart>
         </ResponsiveContainer>
       ) : (

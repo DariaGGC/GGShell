@@ -29,16 +29,16 @@ export const fetchDashboardStats = createAsyncThunk(
 
 const dashboardSlice = createSlice({
   name: 'dashboard',
-  initialState: {
-    sales: [],
-    sessions: [],
-    computers: [],
-    users: [],
-    replenishments: [],
-    isLoading: false,
-    period: 'week',
-    error: null
-  },
+initialState: {
+  sales: [],
+  sessions: [],
+  computers: [],
+  users: [],
+  replenishments: [],
+  isLoading: false,
+  period: 'week',  // ← меняем с 'today' на 'week'
+  error: null
+},
   reducers: {
     setPeriod: (state, action) => {
       state.period = action.payload;
