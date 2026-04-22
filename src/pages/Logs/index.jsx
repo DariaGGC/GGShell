@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Card,
@@ -13,33 +13,35 @@ import {
   Row,
   Col,
   Typography,
+  DatePicker,
 } from 'antd';
 import {
   ReloadOutlined,
   ShoppingCartOutlined,
   WalletOutlined,
-  LoginOutlined,
   HistoryOutlined,
 } from '@ant-design/icons';
 import {
   fetchSales,
   fetchReplenishments,
-  fetchAuthLogs,
   fetchSessionsHistory,
   setActiveTab,
+  setDateRange,
 } from '../../store/slices/logsSlice';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
+const { RangePicker } = DatePicker;
 
 function LogsPage() {
   const dispatch = useDispatch();
   const {
     sales,
     replenishments,
-    authLogs,
     sessionsHistory,
     isLoading,
     activeTab,
+    dateRange,
     error,
   } = useSelector(state => state.logs);
 
@@ -50,9 +52,25 @@ function LogsPage() {
   const loadAllData = () => {
     dispatch(fetchSales());
     dispatch(fetchReplenishments());
-    dispatch(fetchAuthLogs());
     dispatch(fetchSessionsHistory());
   };
+
+  // Фильтрация по датам
+  const filterByDateRange = (data, dateField = 'date') => {
+    if (!dateRange || !dateRange[0] || !dateRange[1]) return data;
+    
+    const startDate = dayjs(dateRange[0]).startOf('day');
+    const endDate = dayjs(dateRange[1]).endOf('day');
+    
+    return data.filter(item => {
+      const itemDate = dayjs(item[dateField]);
+      return itemDate.isAfter(startDate) && itemDate.isBefore(endDate);
+    });
+  };
+
+  const filteredSales = useMemo(() => filterByDateRange(sales, 'date'), [sales, dateRange]);
+  const filteredReplenishments = useMemo(() => filterByDateRange(replenishments, 'date'), [replenishments, dateRange]);
+  const filteredSessions = useMemo(() => filterByDateRange(sessionsHistory, 'end_time'), [sessionsHistory, dateRange]);
 
   // Колонки для таблицы продаж
   const salesColumns = [
@@ -61,8 +79,7 @@ function LogsPage() {
       dataIndex: 'date',
       key: 'date',
       width: 120,
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
-      render: (date) => new Date(date).toLocaleDateString('ru-RU'),
+      render: (date) => dayjs(date).format('DD.MM.YYYY'),
     },
     {
       title: 'Время',
@@ -76,10 +93,10 @@ function LogsPage() {
       key: 'product',
     },
     {
-      title: 'Количество',
+      title: 'Кол-во',
       dataIndex: 'quantity',
       key: 'quantity',
-      width: 120,
+      width: 100,
     },
     {
       title: 'Сумма',
@@ -101,8 +118,7 @@ function LogsPage() {
       dataIndex: 'date',
       key: 'date',
       width: 120,
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
-      render: (date) => new Date(date).toLocaleDateString('ru-RU'),
+      render: (date) => dayjs(date).format('DD.MM.YYYY'),
     },
     {
       title: 'Время',
@@ -127,51 +143,10 @@ function LogsPage() {
       ),
     },
     {
-      title: 'Способ оплаты',
+      title: 'Способ',
       dataIndex: ['payment_methods', 'name'],
       key: 'method',
-      width: 150,
-    },
-  ];
-
-  // Колонки для таблицы авторизаций
-  const authColumns = [
-    {
-      title: 'Дата',
-      dataIndex: 'date',
-      key: 'date',
-      width: 120,
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
-      render: (date) => new Date(date).toLocaleDateString('ru-RU'),
-    },
-    {
-      title: 'Время',
-      dataIndex: 'time',
-      key: 'time',
-      width: 100,
-    },
-    {
-      title: 'Клиент',
-      dataIndex: ['users', 'login'],
-      key: 'user',
-    },
-    {
-      title: 'Действие',
-      dataIndex: 'action',
-      key: 'action',
-      width: 120,
-      render: (action) => (
-        <Tag color={action === 'login' ? 'green' : 'orange'}>
-          {action === 'login' ? 'Вход' : 'Выход'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Компьютер',
-      dataIndex: ['computers', 'number'],
-      key: 'computer',
-      width: 120,
-      render: (number) => number ? `ПК #${number}` : '—',
+      width: 130,
     },
   ];
 
@@ -183,39 +158,45 @@ function LogsPage() {
       key: 'user',
     },
     {
-      title: 'Компьютер',
+      title: 'ПК',
       dataIndex: ['computers', 'number'],
       key: 'computer',
-      render: (number) => `ПК #${number}`,
+      render: (number) => `№${number}`,
+      width: 70,
     },
     {
       title: 'Начало',
       dataIndex: 'start_time',
       key: 'start_time',
-      render: (time) => new Date(time).toLocaleString('ru-RU'),
+      width: 160,
+      render: (time) => dayjs(time).format('DD.MM.YYYY HH:mm'),
     },
     {
       title: 'Конец',
       dataIndex: 'end_time',
       key: 'end_time',
-      render: (time) => time ? new Date(time).toLocaleString('ru-RU') : '—',
+      width: 160,
+      render: (time) => dayjs(time).format('DD.MM.YYYY HH:mm'),
     },
     {
-      title: 'Длительность',
+      title: 'Длит.',
       key: 'duration',
+      width: 100,
       render: (_, record) => {
         if (!record.end_time) return '—';
-        const start = new Date(record.start_time);
-        const end = new Date(record.end_time);
-        const hours = Math.floor((end - start) / (1000 * 60 * 60));
-        const minutes = Math.floor(((end - start) % (1000 * 60 * 60)) / (1000 * 60));
-        return `${hours}ч ${minutes}мин`;
+        const start = dayjs(record.start_time);
+        const end = dayjs(record.end_time);
+        const minutes = end.diff(start, 'minute');
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours}ч ${mins}мин`;
       },
     },
     {
       title: 'Стоимость',
       dataIndex: 'total_cost',
       key: 'total_cost',
+      width: 110,
       render: (value) => (
         <span style={{ fontWeight: 'bold', color: '#52c41a' }}>
           {value} ₽
@@ -224,11 +205,11 @@ function LogsPage() {
     },
   ];
 
-  // Статистика
-  const totalSales = sales.reduce((sum, s) => sum + (s.total_price || 0), 0);
-  const totalReplenishments = replenishments.reduce((sum, r) => sum + (r.amount || 0), 0);
-  const totalSessions = sessionsHistory.length;
-  const totalSessionsRevenue = sessionsHistory.reduce((sum, s) => sum + (s.total_cost || 0), 0);
+  // Статистика (с учётом фильтра)
+  const totalSales = filteredSales.reduce((sum, s) => sum + (s.total_price || 0), 0);
+  const totalReplenishments = filteredReplenishments.reduce((sum, r) => sum + (r.amount || 0), 0);
+  const totalSessions = filteredSessions.length;
+  const totalSessionsRevenue = filteredSessions.reduce((sum, s) => sum + (s.total_cost || 0), 0);
 
   const tabItems = [
     {
@@ -236,15 +217,15 @@ function LogsPage() {
       label: (
         <span>
           <ShoppingCartOutlined />
-          Продажи ({sales.length})
+          Продажи ({filteredSales.length})
         </span>
       ),
       children: (
         <Table
           columns={salesColumns}
-          dataSource={sales}
+          dataSource={filteredSales}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
           scroll={{ x: 600 }}
         />
       ),
@@ -254,33 +235,15 @@ function LogsPage() {
       label: (
         <span>
           <WalletOutlined />
-          Пополнения ({replenishments.length})
+          Пополнения ({filteredReplenishments.length})
         </span>
       ),
       children: (
         <Table
           columns={replenishmentColumns}
-          dataSource={replenishments}
+          dataSource={filteredReplenishments}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 600 }}
-        />
-      ),
-    },
-    {
-      key: 'auth',
-      label: (
-        <span>
-          <LoginOutlined />
-          Авторизации ({authLogs.length})
-        </span>
-      ),
-      children: (
-        <Table
-          columns={authColumns}
-          dataSource={authLogs}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
           scroll={{ x: 600 }}
         />
       ),
@@ -290,15 +253,15 @@ function LogsPage() {
       label: (
         <span>
           <HistoryOutlined />
-          Сессии ({sessionsHistory.length})
+          Сессии ({filteredSessions.length})
         </span>
       ),
       children: (
         <Table
           columns={sessionsColumns}
-          dataSource={sessionsHistory}
+          dataSource={filteredSessions}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10, showSizeChanger: true }}
           scroll={{ x: 800 }}
         />
       ),
@@ -325,21 +288,28 @@ function LogsPage() {
     <div>
       {/* Заголовок */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>
-          📋 Логи и история
-        </Title>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={loadAllData}
-          loading={isLoading}
-        >
-          Обновить
-        </Button>
+        <Title level={2} style={{ margin: 0 }}>📋 Логи и история</Title>
+        <Space>
+          <RangePicker
+            value={dateRange}
+            onChange={(dates) => dispatch(setDateRange(dates))}
+            format="DD.MM.YYYY"
+            placeholder={['Начало', 'Конец']}
+            allowClear
+          />
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={loadAllData}
+            loading={isLoading}
+          >
+            Обновить
+          </Button>
+        </Space>
       </div>
 
       {/* Статистика */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Выручка от продаж"
@@ -349,7 +319,7 @@ function LogsPage() {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Пополнения баланса"
@@ -360,21 +330,13 @@ function LogsPage() {
             />
           </Card>
         </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Всего сессий"
-              value={totalSessions}
-              prefix={<HistoryOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Выручка от сессий"
               value={totalSessionsRevenue}
               suffix="₽"
+              prefix={<HistoryOutlined />}
               valueStyle={{ color: '#52c41a' }}
             />
           </Card>

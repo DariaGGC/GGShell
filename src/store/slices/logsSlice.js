@@ -31,21 +31,6 @@ export const fetchReplenishments = createAsyncThunk(
   }
 );
 
-// Получить логи авторизаций
-export const fetchAuthLogs = createAsyncThunk(
-  'logs/fetchAuthLogs',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await apiClient.get(
-        '/log_auths?select=*,users(*),computers(*)&order=date.desc,time.desc'
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || 'Ошибка загрузки логов авторизаций');
-    }
-  }
-);
-
 // Получить завершённые сессии
 export const fetchSessionsHistory = createAsyncThunk(
   'logs/fetchSessionsHistory',
@@ -66,15 +51,18 @@ const logsSlice = createSlice({
   initialState: {
     sales: [],
     replenishments: [],
-    authLogs: [],
     sessionsHistory: [],
     isLoading: false,
     activeTab: 'sales',
+    dateRange: null, // [startDate, endDate]
     error: null,
   },
   reducers: {
     setActiveTab: (state, action) => {
       state.activeTab = action.payload;
+    },
+    setDateRange: (state, action) => {
+      state.dateRange = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -82,7 +70,6 @@ const logsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetchSales
       .addCase(fetchSales.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -95,20 +82,14 @@ const logsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      // fetchReplenishments
       .addCase(fetchReplenishments.fulfilled, (state, action) => {
         state.replenishments = action.payload;
       })
-      // fetchAuthLogs
-      .addCase(fetchAuthLogs.fulfilled, (state, action) => {
-        state.authLogs = action.payload;
-      })
-      // fetchSessionsHistory
       .addCase(fetchSessionsHistory.fulfilled, (state, action) => {
         state.sessionsHistory = action.payload;
       });
   },
 });
 
-export const { setActiveTab, clearError } = logsSlice.actions;
+export const { setActiveTab, setDateRange, clearError } = logsSlice.actions;
 export default logsSlice.reducer;
