@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../../api/client';
+import { calculateSessionCost } from '../../utils/dateUtils';
 
 // Получить все компьютеры с зонами и активными сессиями
 export const fetchComputers = createAsyncThunk(
@@ -148,37 +149,55 @@ export const endSession = createAsyncThunk(
     try {
       const endTime = new Date().toISOString();
       
-      const sessionResponse = await apiClient.get(`/sessions?id=eq.${sessionId}&select=*,tariffs(*),users(*)`);
+      const sessionResponse = await apiClient.get(
+        `/sessions?id=eq.${sessionId}&select=*,tariffs(*),users(*),computers(*,zones(*))`
+      );
       const session = sessionResponse.data[0];
       
-      const startTime = new Date(session.start_time);
-      const durationHours = (new Date(endTime) - startTime) / (1000 * 60 * 60);
-      const totalCost = Math.ceil(durationHours * session.tariffs.price_per_hour);
+      console.log('🖥️ Завершение сессии:', {
+        sessionId,
+        computerId,
+        startTime: session.start_time,
+        endTime,
+        pricePerHour: session.tariffs?.price_per_hour
+      });
       
-      // Обновляем сессию (сохраняем статистику, но НЕ списываем деньги)
+      const totalCost = calculateSessionCost(
+        session.start_time,
+        endTime,
+        session.tariffs?.price_per_hour || 100
+      );
+      
+      console.log('💰 Рассчитанная стоимость:', totalCost);
+      
+      // 1. Обновляем сессию
       await apiClient.patch(`/sessions?id=eq.${sessionId}`, {
         end_time: endTime,
         total_cost: totalCost,
         status: 'finished'
       });
       
-      // Обновляем статус компьютера
+      // 2. Обновляем статус компьютера на "Свободен"
+      console.log('🔄 Меняем статус компьютера на "Свободен"');
       await apiClient.patch(`/computers?id=eq.${computerId}`, {
         status: 'Свободен'
       });
       
-      // Лог выхода
+      // 3. Лог выхода
       await apiClient.post('/log_auths', {
-        user_id: session.users.id,
+        user_id: session.user_id,
         computer_id: computerId,
         date: endTime.split('T')[0],
         time: endTime.split('T')[1].split('.')[0],
         action: 'logout'
       });
       
+      // 4. Обновляем список компьютеров
       dispatch(fetchComputers());
+      
       return { success: true };
     } catch (error) {
+      console.error('❌ Ошибка завершения сессии:', error);
       return rejectWithValue(error.response?.data || 'Ошибка завершения сессии');
     }
   }

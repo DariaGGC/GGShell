@@ -1,3 +1,4 @@
+import { formatMoscowTime, formatMoscowDateTime } from '../../utils/dateUtils';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -215,16 +216,15 @@ const columns = [
       );
     },
   },
-  {
-    title: 'Начало',
-    key: 'startTime',
-    width: 90,
-    render: (_, record) => {
-      if (!record.activeSession) return '—';
-      const time = new Date(record.activeSession.start_time);
-      return time.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    },
+{
+  title: 'Начало',
+  key: 'startTime',
+  width: 90,
+  render: (_, record) => {
+    if (!record.activeSession) return '—';
+    return formatMoscowTime(record.activeSession.start_time, 'HH:mm');
   },
+},
   {
     title: 'Окончание',
     key: 'endTime',

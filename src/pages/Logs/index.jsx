@@ -4,7 +4,6 @@ import {
   Card,
   Tabs,
   Table,
-  Tag,
   Button,
   Space,
   Spin,
@@ -29,6 +28,7 @@ import {
   setDateRange,
 } from '../../store/slices/logsSlice';
 import dayjs from 'dayjs';
+import { formatMoscowDate, formatMoscowTime, formatMoscowDateTime, MOSCOW_TZ } from '../../utils/dateUtils';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
@@ -55,7 +55,7 @@ function LogsPage() {
     dispatch(fetchSessionsHistory());
   };
 
-  // Фильтрация по датам
+  // Фильтрация по датам с учётом московского времени
   const filterByDateRange = (data, dateField = 'date') => {
     if (!dateRange || !dateRange[0] || !dateRange[1]) return data;
     
@@ -79,13 +79,14 @@ function LogsPage() {
       dataIndex: 'date',
       key: 'date',
       width: 120,
-      render: (date) => dayjs(date).format('DD.MM.YYYY'),
+      render: (date) => formatMoscowDate(date),
     },
     {
       title: 'Время',
       dataIndex: 'time',
       key: 'time',
       width: 100,
+      render: (time) => time,
     },
     {
       title: 'Товар',
@@ -118,13 +119,14 @@ function LogsPage() {
       dataIndex: 'date',
       key: 'date',
       width: 120,
-      render: (date) => dayjs(date).format('DD.MM.YYYY'),
+      render: (date) => formatMoscowDate(date),
     },
     {
       title: 'Время',
       dataIndex: 'time',
       key: 'time',
       width: 100,
+      render: (time) => time,
     },
     {
       title: 'Клиент',
@@ -169,14 +171,14 @@ function LogsPage() {
       dataIndex: 'start_time',
       key: 'start_time',
       width: 160,
-      render: (time) => dayjs(time).format('DD.MM.YYYY HH:mm'),
+      render: (time) => formatMoscowDateTime(time, 'DD.MM.YYYY HH:mm'),
     },
     {
       title: 'Конец',
       dataIndex: 'end_time',
       key: 'end_time',
       width: 160,
-      render: (time) => dayjs(time).format('DD.MM.YYYY HH:mm'),
+      render: (time) => formatMoscowDateTime(time, 'DD.MM.YYYY HH:mm'),
     },
     {
       title: 'Длит.',
@@ -205,10 +207,9 @@ function LogsPage() {
     },
   ];
 
-  // Статистика (с учётом фильтра)
+  // Статистика
   const totalSales = filteredSales.reduce((sum, s) => sum + (s.total_price || 0), 0);
   const totalReplenishments = filteredReplenishments.reduce((sum, r) => sum + (r.amount || 0), 0);
-  const totalSessions = filteredSessions.length;
   const totalSessionsRevenue = filteredSessions.reduce((sum, s) => sum + (s.total_cost || 0), 0);
 
   const tabItems = [
