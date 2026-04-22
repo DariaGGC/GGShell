@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Row, Col, Card, Button, Spin, Alert, message, Typography } from 'antd';
-import { ReloadOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Button, Spin, Alert, message, Typography, Space } from 'antd';
+import { ReloadOutlined, ShoppingCartOutlined, UploadOutlined } from '@ant-design/icons';
 import {
   fetchProducts,
   fetchPaymentMethods,
@@ -14,6 +14,8 @@ import {
 import ProductCard from '../../components/Sales/ProductCard';
 import CartTable from '../../components/Sales/CartTable';
 import PaymentModal from '../../components/Sales/PaymentModal';
+import StockModal from '../../components/Sales/StockModal';
+import EditProductModal from '../../components/Sales/EditProductModal';
 
 const { Title } = Typography;
 
@@ -29,11 +31,19 @@ function SalesPage() {
   } = useSelector(state => state.sales);
 
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [stockModalVisible, setStockModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProducts());
     dispatch(fetchPaymentMethods());
   }, [dispatch]);
+
+const handleEditProduct = (product) => {
+  setSelectedProduct(product);
+  setEditModalVisible(true);
+};
 
   const handleAddToCart = (product) => {
     dispatch(addToCart(product));
@@ -91,13 +101,21 @@ function SalesPage() {
         <Title level={2} style={{ margin: 0 }}>
           🛒 Продажи
         </Title>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={() => dispatch(fetchProducts())}
-          loading={isLoading}
-        >
-          Обновить
-        </Button>
+        <Space>
+          <Button
+            icon={<UploadOutlined />}
+            onClick={() => setStockModalVisible(true)}
+          >
+            Приход
+          </Button>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => dispatch(fetchProducts())}
+            loading={isLoading}
+          >
+            Обновить
+          </Button>
+        </Space>
       </div>
 
       <Row gutter={24}>
@@ -143,10 +161,19 @@ function SalesPage() {
                 {products.map(product => (
                   <Col xs={24} sm={12} md={8} key={product.id}>
                     <ProductCard
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      disabled={product.quantity === 0}
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        onEdit={handleEditProduct}
+                        disabled={product.quantity === 0}
                     />
+                    <EditProductModal
+                        visible={editModalVisible}
+                        product={selectedProduct}
+                        onClose={() => {
+                            setEditModalVisible(false);
+                            setSelectedProduct(null);
+                        }}
+                        />
                   </Col>
                 ))}
               </Row>
@@ -169,6 +196,13 @@ function SalesPage() {
         onClose={() => setPaymentModalVisible(false)}
         onSubmit={handlePayment}
         loading={isSubmitting}
+      />
+
+      {/* Модальное окно прихода товара */}
+      <StockModal
+        visible={stockModalVisible}
+        products={products}
+        onClose={() => setStockModalVisible(false)}
       />
     </div>
   );

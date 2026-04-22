@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../../api/client';
-import { message } from 'antd';
 
 // Получить все товары
 export const fetchProducts = createAsyncThunk(
@@ -60,6 +59,74 @@ export const createSale = createAsyncThunk(
       return { success: true };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Ошибка оформления продажи');
+    }
+  }
+);
+
+// Добавить приход товара (увеличить количество)
+export const addStock = createAsyncThunk(
+  'sales/addStock',
+  async ({ productId, quantity }, { rejectWithValue, dispatch }) => {
+    try {
+      // Получаем текущий товар
+      const response = await apiClient.get(`/products?id=eq.${productId}`);
+      const product = response.data[0];
+      
+      if (!product) {
+        return rejectWithValue('Товар не найден');
+      }
+      
+      // Увеличиваем количество
+      await apiClient.patch(`/products?id=eq.${productId}`, {
+        quantity: product.quantity + quantity
+      });
+      
+      // Обновляем список товаров
+      dispatch(fetchProducts());
+      
+      return { success: true };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Ошибка пополнения товара');
+    }
+  }
+);
+// Обновить существующий товар (название, цена)
+export const updateProduct = createAsyncThunk(
+  'sales/updateProduct',
+  async ({ productId, name, price }, { rejectWithValue, dispatch }) => {
+    try {
+      await apiClient.patch(`/products?id=eq.${productId}`, {
+        name,
+        price
+      });
+      
+      // Обновляем список товаров
+      dispatch(fetchProducts());
+      
+      return { success: true };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Ошибка обновления товара');
+    }
+  }
+);
+
+// Создать новый товар
+export const createProduct = createAsyncThunk(
+  'sales/createProduct',
+  async (productData, { rejectWithValue, dispatch }) => {
+    try {
+      await apiClient.post('/products', {
+        name: productData.name,
+        price: productData.price,
+        quantity: productData.quantity || 0
+      });
+      
+      // Обновляем список товаров
+      dispatch(fetchProducts());
+      
+      return { success: true };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Ошибка создания товара');
     }
   }
 );
@@ -124,6 +191,17 @@ const salesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+    .addCase(updateProduct.pending, (state) => {
+  state.isLoading = true;
+  state.error = null;
+})
+.addCase(updateProduct.fulfilled, (state) => {
+  state.isLoading = false;
+})
+.addCase(updateProduct.rejected, (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+})
       // fetchProducts
       .addCase(fetchProducts.pending, (state) => {
         state.isLoading = true;
@@ -137,13 +215,16 @@ const salesSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+      
       // fetchPaymentMethods
       .addCase(fetchPaymentMethods.fulfilled, (state, action) => {
         state.paymentMethods = action.payload;
       })
+      
       // createSale
       .addCase(createSale.pending, (state) => {
         state.isSubmitting = true;
+        state.error = null;
       })
       .addCase(createSale.fulfilled, (state) => {
         state.isSubmitting = false;
@@ -151,6 +232,32 @@ const salesSlice = createSlice({
       })
       .addCase(createSale.rejected, (state, action) => {
         state.isSubmitting = false;
+        state.error = action.payload;
+      })
+      
+      // addStock
+      .addCase(addStock.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(addStock.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(addStock.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      
+      // createProduct
+      .addCase(createProduct.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createProduct.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload;
       });
   },

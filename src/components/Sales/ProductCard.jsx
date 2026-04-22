@@ -1,19 +1,41 @@
-import { Card, Button, Tag, Space, Typography } from 'antd';
-import { ShoppingCartOutlined } from '@ant-design/icons';
+import { Card, Button, Tag, Space, Typography, Dropdown } from 'antd';
+import { ShoppingCartOutlined, MoreOutlined, EditOutlined } from '@ant-design/icons';
 
 const { Text, Title } = Typography;
 
-function ProductCard({ product, onAddToCart, disabled }) {
+function ProductCard({ product, onAddToCart, onEdit, disabled }) {
   const isOutOfStock = product.quantity === 0;
+
+  const menuItems = [
+    {
+      key: 'edit',
+      label: 'Редактировать',
+      icon: <EditOutlined />,
+      onClick: () => onEdit(product),
+    },
+  ];
 
   return (
     <Card
       hoverable
-      style={{ height: '100%' }}
+      style={{ height: '100%', position: 'relative' }}
       bodyStyle={{ padding: 16 }}
     >
+      {/* Кнопка меню (⋮) */}
+      <Dropdown
+        menu={{ items: menuItems }}
+        trigger={['click']}
+        placement="bottomRight"
+      >
+        <Button
+          type="text"
+          icon={<MoreOutlined />}
+          style={{ position: 'absolute', top: 8, right: 8 }}
+        />
+      </Dropdown>
+
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Title level={5} style={{ marginBottom: 8 }}>
+        <Title level={5} style={{ marginBottom: 8, paddingRight: 30 }}>
           {product.name}
         </Title>
         
