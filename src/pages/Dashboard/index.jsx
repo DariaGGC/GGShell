@@ -24,6 +24,7 @@ function DashboardPage() {
     computers = [],
     users = [],
     replenishments = [],
+    sessions = [],
     isLoading,
     period,
   } = useSelector(state => state.dashboard);
@@ -88,6 +89,54 @@ function DashboardPage() {
     u.created_at && dayjs(u.created_at).isAfter(dayjs().subtract(365, 'day'))
   ).length;
 
+  // Сравнение с предыдущим периодом
+  const prevDayUsers = users.filter(u => {
+    if (!u.created_at) return false;
+    const d = dayjs(u.created_at);
+    const yesterday = dayjs().subtract(1, 'day');
+    return d.isAfter(yesterday.startOf('day')) && d.isBefore(yesterday.endOf('day'));
+  }).length;
+
+  const prevWeekUsers = users.filter(u => {
+    if (!u.created_at) return false;
+    const d = dayjs(u.created_at);
+    const start = dayjs().subtract(14, 'day');
+    const end = dayjs().subtract(7, 'day');
+    return d.isAfter(start) && d.isBefore(end);
+  }).length;
+
+  const prevMonthUsers = users.filter(u => {
+    if (!u.created_at) return false;
+    const d = dayjs(u.created_at);
+    const start = dayjs().subtract(60, 'day');
+    const end = dayjs().subtract(30, 'day');
+    return d.isAfter(start) && d.isBefore(end);
+  }).length;
+
+  const prevYearUsers = users.filter(u => {
+    if (!u.created_at) return false;
+    const d = dayjs(u.created_at);
+    const start = dayjs().subtract(730, 'day');
+    const end = dayjs().subtract(365, 'day');
+    return d.isAfter(start) && d.isBefore(end);
+  }).length;
+
+  const getTrend = (current, prev) => {
+    if (prev === 0) return { value: 0, color: '#8c8c8c', arrow: '' };
+    const diff = current - prev;
+    const percent = Math.round((diff / prev) * 100);
+    return {
+      value: Math.abs(percent),
+      color: diff >= 0 ? '#52c41a' : '#ff4d4f',
+      arrow: diff >= 0 ? '↑' : '↓'
+    };
+  };
+
+  const dayTrend = getTrend(newUsersToday, prevDayUsers);
+  const weekTrend = getTrend(newUsersWeek, prevWeekUsers);
+  const monthTrend = getTrend(newUsersMonth, prevMonthUsers);
+  const yearTrend = getTrend(newUsersYear, prevYearUsers);
+
   // ==================== ЗАГРУЗКА ПО ЗОНАМ ====================
   const zones = useMemo(() => {
     const zoneMap = {
@@ -109,6 +158,39 @@ function DashboardPage() {
       percent: z.total ? Math.round(((z.busy + z.maintenance) / z.total) * 100) : 0
     }));
   }, [computers]);
+
+  // ==================== ПОПУЛЯРНОСТЬ ЗОН ЗА СЕГОДНЯ ====================
+  const zonePopularity = useMemo(() => {
+    const todayStr = dayjs().format('YYYY-MM-DD');
+    const zoneSessions = { 1: 0, 2: 0, 3: 0 };
+    
+    sessions.forEach(session => {
+      if (session.start_time && dayjs(session.start_time).format('YYYY-MM-DD') === todayStr) {
+        const zoneId = session.computers?.zone_id;
+        if (zoneId && zoneSessions[zoneId] !== undefined) {
+          zoneSessions[zoneId]++;
+        }
+      }
+    });
+    
+    const totalTodaySessions = zoneSessions[1] + zoneSessions[2] + zoneSessions[3];
+    
+    return {
+      1: { 
+        sessions: zoneSessions[1], 
+        percent: totalTodaySessions ? Math.round((zoneSessions[1] / totalTodaySessions) * 100) : 0 
+      },
+      2: { 
+        sessions: zoneSessions[2], 
+        percent: totalTodaySessions ? Math.round((zoneSessions[2] / totalTodaySessions) * 100) : 0 
+      },
+      3: { 
+        sessions: zoneSessions[3], 
+        percent: totalTodaySessions ? Math.round((zoneSessions[3] / totalTodaySessions) * 100) : 0 
+      },
+      total: totalTodaySessions
+    };
+  }, [sessions]);
 
   // ==================== ТОП ТОВАРОВ ====================
   const topProducts = useMemo(() => {
@@ -224,22 +306,42 @@ function DashboardPage() {
               <div style={{ marginTop: 20 }}>
                 <Text type="secondary" style={{ fontSize: 14 }}>🆕 Новых:</Text>
               </div>
-              <div style={{ marginTop: 12, display: 'flex', gap: 24 }}>
+              <div style={{ marginTop: 12, display: 'flex', gap: 20 }}>
                 <div>
                   <Text type="secondary">Сегодня</Text><br />
                   <strong style={{ fontSize: 18 }}>{newUsersToday}</strong>
+                  {dayTrend.value > 0 && (
+                    <span style={{ marginLeft: 6, color: dayTrend.color, fontSize: 14 }}>
+                      {dayTrend.arrow} {dayTrend.value}%
+                    </span>
+                  )}
                 </div>
                 <div>
                   <Text type="secondary">Неделя</Text><br />
                   <strong style={{ fontSize: 18 }}>{newUsersWeek}</strong>
+                  {weekTrend.value > 0 && (
+                    <span style={{ marginLeft: 6, color: weekTrend.color, fontSize: 14 }}>
+                      {weekTrend.arrow} {weekTrend.value}%
+                    </span>
+                  )}
                 </div>
                 <div>
                   <Text type="secondary">Месяц</Text><br />
                   <strong style={{ fontSize: 18 }}>{newUsersMonth}</strong>
+                  {monthTrend.value > 0 && (
+                    <span style={{ marginLeft: 6, color: monthTrend.color, fontSize: 14 }}>
+                      {monthTrend.arrow} {monthTrend.value}%
+                    </span>
+                  )}
                 </div>
                 <div>
                   <Text type="secondary">Год</Text><br />
                   <strong style={{ fontSize: 18 }}>{newUsersYear}</strong>
+                  {yearTrend.value > 0 && (
+                    <span style={{ marginLeft: 6, color: yearTrend.color, fontSize: 14 }}>
+                      {yearTrend.arrow} {yearTrend.value}%
+                    </span>
+                  )}
                 </div>
               </div>
             </Card>
@@ -258,27 +360,56 @@ function DashboardPage() {
           </Col>
           <Col xs={24} lg={8}>
             <Card title="📈 Загрузка по зонам" style={cardStyle}>
-              {zones.map(z => (
-                <div key={z.name} style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <strong>{z.name}</strong>
-                    <span>
-                      {z.used} / {z.total}
-                      {z.maintenance > 0 && (
-                        <span style={{ marginLeft: 8, color: '#faad14' }}>🔧 {z.maintenance}</span>
-                      )}
-                    </span>
+              {zones.map(z => {
+                const zoneId = z.name === 'Стандарт' ? 1 : z.name === 'VIP' ? 2 : 3;
+                const popularity = zonePopularity[zoneId];
+                
+                return (
+                  <div key={z.name} style={{ marginBottom: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <strong>{z.name}</strong>
+                      <span>
+                        {z.used} / {z.total}
+                        {z.maintenance > 0 && (
+                          <span style={{ marginLeft: 8, color: '#faad14' }}>🔧 {z.maintenance}</span>
+                        )}
+                      </span>
+                    </div>
+                    <Progress
+                      percent={z.percent}
+                      status={z.percent > 80 ? 'exception' : 'active'}
+                      strokeColor={
+                        z.name === 'Стандарт' ? '#1677ff' :
+                        z.name === 'VIP' ? '#faad14' : '#52c41a'
+                      }
+                    />
                   </div>
-                  <Progress
-                    percent={z.percent}
-                    status={z.percent > 80 ? 'exception' : 'active'}
-                    strokeColor={
-                      z.name === 'Стандарт' ? '#1677ff' :
-                      z.name === 'VIP' ? '#faad14' : '#52c41a'
-                    }
-                  />
+                );
+              })}
+              
+              {/* Популярность зон за сегодня */}
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+                <Text type="secondary" style={{ fontSize: 13, marginBottom: 12, display: 'block' }}>
+                  📊 Популярность сегодня ({zonePopularity.total} сессий)
+                </Text>
+                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <Tag color="blue">Стандарт</Tag>
+                    <div><strong>{zonePopularity[1].sessions}</strong></div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{zonePopularity[1].percent}%</Text>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <Tag color="gold">VIP</Tag>
+                    <div><strong>{zonePopularity[2].sessions}</strong></div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{zonePopularity[2].percent}%</Text>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <Tag color="green">Буткемп</Tag>
+                    <div><strong>{zonePopularity[3].sessions}</strong></div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{zonePopularity[3].percent}%</Text>
+                  </div>
                 </div>
-              ))}
+              </div>
             </Card>
           </Col>
         </Row>

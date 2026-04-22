@@ -6,8 +6,8 @@ export const fetchDashboardStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const [salesRes, sessionsRes, computersRes, usersRes, replenishmentsRes] = await Promise.all([
-        apiClient.get('/sales_journals?select=*,products(*),payment_methods(*)'),  // ← добавили payment_methods
-        apiClient.get('/sessions?select=*'),
+        apiClient.get('/sales_journals?select=*,products(*),payment_methods(*)'),
+        apiClient.get('/sessions?select=*,computers(*),users(*)'),  // ← важно для популярности зон
         apiClient.get('/computers?select=*,zones(*)'),
         apiClient.get('/users?select=*'),
         apiClient.get('/replenishment_logs?select=*,payment_methods(*),users(*)')
@@ -15,7 +15,7 @@ export const fetchDashboardStats = createAsyncThunk(
 
       return {
         sales: salesRes.data || [],
-        sessions: sessionsRes.data || [],
+        sessions: sessionsRes.data || [],  // ← добавить в state
         computers: computersRes.data || [],
         users: usersRes.data || [],
         replenishments: replenishmentsRes.data || []
@@ -31,12 +31,12 @@ const dashboardSlice = createSlice({
   name: 'dashboard',
 initialState: {
   sales: [],
-  sessions: [],
+  sessions: [],  // ← добавить
   computers: [],
   users: [],
   replenishments: [],
   isLoading: false,
-  period: 'week',  // ← меняем с 'today' на 'week'
+  period: 'week',
   error: null
 },
   reducers: {
