@@ -31,20 +31,18 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
+// Обновить пользователя
 export const updateUser = createAsyncThunk(
   'users/updateUser',
-  async ({ userId, login, firstName, lastName, phone }, { rejectWithValue, dispatch }) => {
+  async ({ userId, login, name, phone }, { rejectWithValue, dispatch }) => {
     try {
       await apiClient.patch(`/users?id=eq.${userId}`, {
         login,
-        firstName,
-        lastName,
+        name,
         phone
       });
       
-      // Обновляем список пользователей
       dispatch(fetchUsers());
-      
       return { success: true };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Ошибка обновления пользователя');

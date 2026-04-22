@@ -15,22 +15,26 @@ function AddUserModal({ visible, onClose }) {
     try {
       const now = new Date().toISOString();
       
-      await apiClient.post('/users', {
+      // Отправляем ТОЛЬКО те поля, которые есть в базе
+      const userData = {
         login: values.login,
-        firstName: values.firstName || '',
-        lastName: values.lastName || '',
+        name: values.name || `${values.lastName || ''} ${values.firstName || ''}`.trim(),
         phone: values.phone || '',
         balance: 0,
         created_at: now
-      });
+      };
+      
+      console.log('Creating user:', userData);
+      
+      await apiClient.post('/users', userData);
       
       message.success(`Пользователь "${values.login}" создан`);
       form.resetFields();
       dispatch(fetchUsers());
       onClose();
     } catch (error) {
-      message.error('Ошибка при создании пользователя');
-      console.error(error);
+      console.error('Create user error:', error);
+      message.error('Ошибка при создании пользователя: ' + (error.response?.data?.message || ''));
     } finally {
       setLoading(false);
     }
@@ -67,23 +71,13 @@ function AddUserModal({ visible, onClose }) {
           <Input placeholder="Логин" />
         </Form.Item>
 
-        <Form.Item name="lastName" label="Фамилия">
-          <Input placeholder="Фамилия" />
-        </Form.Item>
-
-        <Form.Item name="firstName" label="Имя">
-          <Input placeholder="Имя" />
+        <Form.Item name="name" label="ФИО">
+          <Input placeholder="Иванов Иван" />
         </Form.Item>
 
         <Form.Item
           name="phone"
           label="Телефон"
-          rules={[
-            {
-              pattern: /^[\+]?[0-9\s\-\(\)]{10,20}$/,
-              message: 'Неверный формат телефона'
-            }
-          ]}
         >
           <Input placeholder="+7 (999) 123-45-67" />
         </Form.Item>

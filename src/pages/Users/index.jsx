@@ -118,13 +118,12 @@ function UsersPage() {
       sorter: (a, b) => a.login.localeCompare(b.login),
     },
     {
-      title: 'ФИО',
-      key: 'fullName',
-      width: 180,
-      render: (_, record) => {
-        const name = [record.lastName, record.firstName].filter(Boolean).join(' ');
-        return name || record.name || '—';
-      },
+    title: 'ФИО',
+    key: 'fullName',
+    width: 180,
+    render: (_, record) => {
+        return record.name || '—';
+    },
     },
     {
       title: 'Телефон',

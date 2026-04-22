@@ -13,19 +13,12 @@ function EditUserModal({ visible, user, onClose }) {
 
   useEffect(() => {
     if (user && visible) {
-      console.log('Editing user:', user); // Для отладки
-      
-      // Пробуем разные варианты полей (в базе может быть name или firstName/lastName)
-      const firstName = user.firstName || user.first_name || user.name?.split(' ')[1] || '';
-      const lastName = user.lastName || user.last_name || user.name?.split(' ')[0] || '';
-      const phone = user.phone || user.mobile || '';
-      const login = user.login || '';
+      console.log('Editing user:', user);
       
       form.setFieldsValue({
-        login: login,
-        firstName: firstName,
-        lastName: lastName,
-        phone: phone,
+        login: user.login || '',
+        name: user.name || '',
+        phone: user.phone || user.mobile || '',
       });
     }
   }, [user, visible, form]);
@@ -36,8 +29,7 @@ function EditUserModal({ visible, user, onClose }) {
       await dispatch(updateUser({
         userId: user.id,
         login: values.login,
-        firstName: values.firstName,
-        lastName: values.lastName,
+        name: values.name,
         phone: values.phone
       })).unwrap();
       
@@ -81,18 +73,6 @@ function EditUserModal({ visible, user, onClose }) {
     }
   };
 
-  // Получаем имя для отображения
-  const getDisplayName = () => {
-    if (!user) return '—';
-    const firstName = user.firstName || user.first_name || '';
-    const lastName = user.lastName || user.last_name || '';
-    
-    if (firstName || lastName) {
-      return `${lastName} ${firstName}`.trim();
-    }
-    return user.name || '—';
-  };
-
   return (
     <Modal
       title={
@@ -116,7 +96,7 @@ function EditUserModal({ visible, user, onClose }) {
       }}>
         <div style={{ marginBottom: 8 }}>
           <Text strong>Пользователь:</Text>
-          <Text style={{ marginLeft: 8 }}>{getDisplayName()}</Text>
+          <Text style={{ marginLeft: 8 }}>{user?.name || user?.login || '—'}</Text>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <CalendarOutlined style={{ marginRight: 8, color: '#1677ff' }} />
@@ -151,30 +131,11 @@ function EditUserModal({ visible, user, onClose }) {
           <Input placeholder="Логин" />
         </Form.Item>
 
-        <Form.Item
-          name="lastName"
-          label="Фамилия"
-        >
-          <Input placeholder="Фамилия" />
+        <Form.Item name="name" label="ФИО">
+          <Input placeholder="Иванов Иван" />
         </Form.Item>
 
-        <Form.Item
-          name="firstName"
-          label="Имя"
-        >
-          <Input placeholder="Имя" />
-        </Form.Item>
-
-        <Form.Item
-          name="phone"
-          label="Телефон"
-          rules={[
-            {
-              pattern: /^[\+]?[0-9\s\-\(\)]{10,20}$/,
-              message: 'Неверный формат телефона'
-            }
-          ]}
-        >
+        <Form.Item name="phone" label="Телефон">
           <Input placeholder="+7 (999) 123-45-67" />
         </Form.Item>
 
