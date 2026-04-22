@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getCurrentMoscowDate, getCurrentMoscowTime } from '../../utils/dateUtils';
 import apiClient from '../../api/client';
 
 export const fetchProducts = createAsyncThunk(
@@ -30,8 +31,8 @@ export const createSale = createAsyncThunk(
   async ({ items, paymentMethodId }, { rejectWithValue, dispatch }) => {
     try {
       const now = new Date();
-      const date = now.toISOString().split('T')[0];
-      const time = now.toTimeString().split(' ')[0];
+      const date = getCurrentMoscowDate();
+      const time = getCurrentMoscowTime();
       for (const item of items) {
         await apiClient.post('/sales_journals', {
           product_id: item.id,

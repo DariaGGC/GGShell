@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getCurrentMoscowDate, getCurrentMoscowTime } from '../../utils/dateUtils';
 import apiClient from '../../api/client';
 
 export const fetchUsers = createAsyncThunk(
@@ -53,8 +54,8 @@ export const topUpBalance = createAsyncThunk(
         user_id: userId,
         payment_method_id: paymentMethodId,
         amount: amount,
-        date: now.toISOString().split('T')[0],
-        time: now.toTimeString().split(' ')[0]
+        date: getCurrentMoscowDate(),
+        time: getCurrentMoscowTime()
       });
 
       dispatch(fetchUsers());

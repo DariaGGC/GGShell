@@ -60,7 +60,7 @@ function JournalPage() {
 
   const filteredSales = useMemo(() => filterByDateRange(sales, 'date'), [sales, dateRange]);
   const filteredReplenishments = useMemo(() => filterByDateRange(replenishments, 'date'), [replenishments, dateRange]);
-  const filteredSessions = useMemo(() => filterByDateRange(sessionsHistory, 'end_time'), [sessionsHistory, dateRange]);
+  const filteredSessions = useMemo(() => filterByDateRange(sessionsHistory, 'start_time'), [sessionsHistory, dateRange]);
 
   const salesColumns = [
     { title: 'Дата', dataIndex: 'date', key: 'date', width: 120, render: d => dayjs(d).format('DD.MM.YYYY') },

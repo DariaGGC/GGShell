@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../../api/client';
-import { calculateSessionCost } from '../../utils/dateUtils';
+import { calculateSessionCost, getCurrentMoscowDate, getCurrentMoscowTime, getCurrentMoscowISO } from '../../utils/dateUtils';
 
 export const fetchComputers = createAsyncThunk(
   'computers/fetchComputers',
@@ -54,10 +54,22 @@ export const startSession = createAsyncThunk(
   'computers/startSession',
   async ({ computerId, userId, tariffId }, { rejectWithValue, dispatch }) => {
     try {
-      const now = new Date().toISOString();
-      await apiClient.post('/sessions', { user_id: userId, computer_id: computerId, tariff_id: tariffId, start_time: now, status: 'active' });
+      const now = getCurrentMoscowISO();
+      await apiClient.post('/sessions', {
+        user_id: userId,
+        computer_id: computerId,
+        tariff_id: tariffId,
+        start_time: now,
+        status: 'active'
+      });
       await apiClient.patch(`/computers?id=eq.${computerId}`, { status: 'Занят' });
-      await apiClient.post('/log_auths', { user_id: userId, computer_id: computerId, date: now.split('T')[0], time: now.split('T')[1].split('.')[0], action: 'login' });
+      await apiClient.post('/log_auths', {
+        user_id: userId,
+        computer_id: computerId,
+        date: getCurrentMoscowDate(),
+        time: getCurrentMoscowTime(),
+        action: 'login'
+      });
       dispatch(fetchComputers());
       return { success: true };
     } catch (error) {
@@ -101,13 +113,25 @@ export const endSession = createAsyncThunk(
   'computers/endSession',
   async ({ sessionId, computerId }, { rejectWithValue, dispatch }) => {
     try {
-      const endTime = new Date().toISOString();
-      const sessionResponse = await apiClient.get(`/sessions?id=eq.${sessionId}&select=*,tariffs(*),users(*),computers(*,zones(*))`);
+      const endTime = getCurrentMoscowISO();
+      const sessionResponse = await apiClient.get(
+        `/sessions?id=eq.${sessionId}&select=*,tariffs(*),users(*),computers(*,zones(*))`
+      );
       const session = sessionResponse.data[0];
       const totalCost = calculateSessionCost(session.start_time, endTime, session.tariffs?.price_per_hour || 100);
-      await apiClient.patch(`/sessions?id=eq.${sessionId}`, { end_time: endTime, total_cost: totalCost, status: 'finished' });
+      await apiClient.patch(`/sessions?id=eq.${sessionId}`, {
+        end_time: endTime,
+        total_cost: totalCost,
+        status: 'finished'
+      });
       await apiClient.patch(`/computers?id=eq.${computerId}`, { status: 'Свободен' });
-      await apiClient.post('/log_auths', { user_id: session.user_id, computer_id: computerId, date: endTime.split('T')[0], time: endTime.split('T')[1].split('.')[0], action: 'logout' });
+      await apiClient.post('/log_auths', {
+        user_id: session.user_id,
+        computer_id: computerId,
+        date: getCurrentMoscowDate(),
+        time: getCurrentMoscowTime(),
+        action: 'logout'
+      });
       dispatch(fetchComputers());
       return { success: true };
     } catch (error) {

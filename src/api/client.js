@@ -9,11 +9,12 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_KEY,
-    'Authorization': `Bearer ${SUPABASE_KEY}`
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Prefer': 'return=representation'
   },
+  transformRequest: [(data) => JSON.stringify(data)]
 });
 
-// Помогает отслеживать запросы при отладке
 apiClient.interceptors.request.use(
   (config) => {
     console.log(`${config.method?.toUpperCase()} ${config.url}`);

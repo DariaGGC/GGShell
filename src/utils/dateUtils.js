@@ -32,6 +32,14 @@ export const getCurrentMoscowISO = () => {
   return dayjs().tz(MOSCOW_TZ).toISOString();
 };
 
+export const getCurrentMoscowDate = () => {
+  return dayjs().tz(MOSCOW_TZ).format('YYYY-MM-DD');
+};
+
+export const getCurrentMoscowTime = () => {
+  return dayjs().tz(MOSCOW_TZ).format('HH:mm:ss');
+};
+
 // Сравнение в UTC обязательно — иначе из-за разницы часовых поясов длительность искажается
 export const calculateSessionCost = (startTime, endTime, pricePerHour) => {
   if (!startTime || !endTime || !pricePerHour) return 0;
