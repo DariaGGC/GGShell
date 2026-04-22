@@ -236,9 +236,9 @@ function LogsPage() {
   ];
 
   // Статистика
-  const totalSales = filteredSales.reduce((sum, s) => sum + (s.total_price || 0), 0);
-  const totalReplenishments = filteredReplenishments.reduce((sum, r) => sum + (r.amount || 0), 0);
-  const totalSessionsRevenue = filteredSessions.reduce((sum, s) => sum + (s.total_cost || 0), 0);
+const totalSales = filteredSales.reduce((sum, s) => sum + (s.total_price || 0), 0);
+const totalReplenishments = filteredReplenishments.reduce((sum, r) => sum + (r.amount || 0), 0);
+const totalRevenue = totalSales + totalReplenishments;
 
   const tabItems = [
     {
@@ -349,8 +349,19 @@ function LogsPage() {
         </Space>
       </div>
 
-      {/* Статистика */}
+ {/* Статистика */}
 <Row gutter={16} style={{ marginBottom: 24 }}>
+  <Col span={8}>
+    <Card>
+      <Statistic
+        title="Общая выручка"
+        value={totalRevenue}
+        suffix="₽"
+        prefix={<ShoppingCartOutlined />}
+        styles={{ content: { color: '#52c41a' } }}
+      />
+    </Card>
+  </Col>
   <Col span={8}>
     <Card>
       <Statistic
@@ -369,17 +380,6 @@ function LogsPage() {
         suffix="₽"
         prefix={<WalletOutlined />}
         styles={{ content: { color: '#1677ff' } }}
-      />
-    </Card>
-  </Col>
-  <Col span={8}>
-    <Card>
-      <Statistic
-        title="Выручка от сессий"
-        value={totalSessionsRevenue}
-        suffix="₽"
-        prefix={<HistoryOutlined />}
-        styles={{ content: { color: '#52c41a' } }}
       />
     </Card>
   </Col>
