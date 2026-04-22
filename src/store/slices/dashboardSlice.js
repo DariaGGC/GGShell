@@ -5,11 +5,12 @@ export const fetchDashboardStats = createAsyncThunk(
   'dashboard/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
-      const [salesRes, sessionsRes, computersRes, usersRes] = await Promise.all([
-        apiClient.get('/sales_journals?select=*'),
+      const [salesRes, sessionsRes, computersRes, usersRes, replenishmentsRes] = await Promise.all([
+        apiClient.get('/sales_journals?select=*,products(*)'),  // ← добавили products(*)
         apiClient.get('/sessions?select=*'),
-        apiClient.get('/computers?select=*'),
+        apiClient.get('/computers?select=*,zones(*)'),
         apiClient.get('/users?select=*'),
+        apiClient.get('/replenishment_logs?select=*,payment_methods(*),users(*)')  // ← добавили users(*)
       ]);
 
       return {
@@ -17,6 +18,7 @@ export const fetchDashboardStats = createAsyncThunk(
         sessions: sessionsRes.data || [],
         computers: computersRes.data || [],
         users: usersRes.data || [],
+        replenishments: replenishmentsRes.data || []
       };
     } catch (error) {
       console.error('Dashboard fetch error:', error);
@@ -32,17 +34,18 @@ const dashboardSlice = createSlice({
     sessions: [],
     computers: [],
     users: [],
+    replenishments: [],
     isLoading: false,
-    dateRange: 'week',
-    error: null,
+    period: 'week',
+    error: null
   },
   reducers: {
-    setDateRange: (state, action) => {
-      state.dateRange = action.payload;
+    setPeriod: (state, action) => {
+      state.period = action.payload;
     },
     clearError: (state) => {
       state.error = null;
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -56,13 +59,14 @@ const dashboardSlice = createSlice({
         state.sessions = action.payload.sessions;
         state.computers = action.payload.computers;
         state.users = action.payload.users;
+        state.replenishments = action.payload.replenishments;
       })
       .addCase(fetchDashboardStats.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });
-  },
+  }
 });
 
-export const { setDateRange, clearError } = dashboardSlice.actions;
+export const { setPeriod, clearError } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

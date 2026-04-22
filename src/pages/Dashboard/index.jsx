@@ -1,17 +1,15 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Row, Col, Card, Statistic, Button, Spin, Alert, Typography, Progress, Space, Tag, Empty } from 'antd';
+import { Row, Col, Card, Statistic, Table, Progress, Typography, Radio, Spin } from 'antd';
 import {
-  ReloadOutlined,
-  DesktopOutlined,
   UserOutlined,
   ShoppingCartOutlined,
   WalletOutlined,
   RiseOutlined,
 } from '@ant-design/icons';
-import { fetchDashboardStats, setDateRange } from '../../store/slices/dashboardSlice';
+import { fetchDashboardStats, setPeriod } from '../../store/slices/dashboardSlice';
 import RevenueChart from '../../components/Dashboard/RevenueChart';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -19,265 +17,236 @@ function DashboardPage() {
   const dispatch = useDispatch();
   const {
     sales = [],
-    sessions = [],
     computers = [],
     users = [],
+    replenishments = [],
     isLoading,
-    dateRange,
-    error,
-  } = useSelector(state => state.dashboard || {});
+    period,
+  } = useSelector(state => state.dashboard);
+
+  const [topPeriod, setTopPeriod] = useState('week');
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
   }, [dispatch]);
 
-  // Статистика с проверкой на пустые массивы
-  const stats = useMemo(() => {
-    const totalComputers = computers?.length || 0;
-    const freeComputers = computers?.filter(c => c.status === 'Свободен').length || 0;
-    const occupiedComputers = computers?.filter(c => c.status === 'Занят').length || 0;
-    
-    const activeSessions = sessions?.filter(s => s.status === 'active') || [];
-    const totalUsers = users?.length || 0;
-    const activeUsers = activeSessions.length;
-    
-    const today = new Date().toISOString().split('T')[0];
-    const todaySales = sales
-      ?.filter(s => s.date === today)
-      .reduce((sum, s) => sum + (s.total_price || 0), 0) || 0;
-    
-    const todaySessions = sessions
-      ?.filter(s => s.end_time && s.end_time.startsWith(today))
-      .reduce((sum, s) => sum + (s.total_cost || 0), 0) || 0;
+  useEffect(() => {
+  console.log('📊 Sales:', sales);
+  console.log('💰 Replenishments:', replenishments);
+}, [sales, replenishments]);
 
-    const totalBalance = users?.reduce((sum, u) => sum + (u.balance || 0), 0) || 0;
+  const inPeriod = (date, periodType) => {
+    if (!date) return false;
+    const d = dayjs(date);
+    const now = dayjs();
+    if (periodType === 'today') return d.isSame(now, 'day');
+    if (periodType === 'week') return d.isAfter(now.subtract(7, 'day'));
+    if (periodType === 'month') return d.isAfter(now.subtract(30, 'day'));
+    if (periodType === 'year') return d.isAfter(now.subtract(365, 'day'));
+    return true;
+  };
 
-    return {
-      totalComputers,
-      freeComputers,
-      occupiedComputers,
-      totalUsers,
-      activeUsers,
-      todaySales,
-      todaySessions,
-      todayTotal: todaySales + todaySessions,
-      totalBalance,
-      occupancyRate: totalComputers > 0 
-        ? Math.round((occupiedComputers / totalComputers) * 100)
-        : 0,
+  // сегодня
+  const today = dayjs().format('YYYY-MM-DD');
+  const todaySalesTotal = sales
+    .filter(s => s.date === today)
+    .reduce((sum, s) => sum + (s.total_price || 0), 0);
+
+  const todayCash = replenishments
+    .filter(r => r.date === today && r.payment_methods?.name?.toLowerCase().includes('нал'))
+    .reduce((s, r) => s + (r.amount || 0), 0);
+
+  const todayCard = replenishments
+    .filter(r => r.date === today && r.payment_methods?.name?.toLowerCase().includes('карт'))
+    .reduce((s, r) => s + (r.amount || 0), 0);
+
+  const todayTotal = todaySalesTotal + todayCash + todayCard;
+
+  // пользователи
+  const totalUsers = users.length;
+  const newUsersToday = users.filter(u =>
+    u.created_at && dayjs(u.created_at).isSame(dayjs(), 'day')
+  ).length;
+
+  // зоны
+  const zones = useMemo(() => {
+    const zoneMap = {
+      1: { name: 'Стандарт', total: 0, busy: 0, maintenance: 0 },
+      2: { name: 'VIP', total: 0, busy: 0, maintenance: 0 },
+      3: { name: 'Буткемп', total: 0, busy: 0, maintenance: 0 },
     };
-  }, [computers, sessions, users, sales]);
-
-  // Топ товаров по продажам
-  const topProducts = useMemo(() => {
-    if (!sales?.length) return [];
-    
-    const productSales = {};
-    sales.forEach(sale => {
-      if (!productSales[sale.product_id]) {
-        productSales[sale.product_id] = {
-          id: sale.product_id,
-          quantity: 0,
-          revenue: 0,
-        };
-      }
-      productSales[sale.product_id].quantity += sale.quantity || 0;
-      productSales[sale.product_id].revenue += sale.total_price || 0;
+    computers.forEach(c => {
+      if (!zoneMap[c.zone_id]) return;
+      zoneMap[c.zone_id].total++;
+      if (c.status === 'Занят') zoneMap[c.zone_id].busy++;
+      if (c.status === 'Обслуживание') zoneMap[c.zone_id].maintenance++;
     });
-    
-    return Object.values(productSales)
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
-  }, [sales]);
+    return Object.values(zoneMap).map(z => ({
+      ...z,
+      used: z.busy + z.maintenance,
+      percent: z.total ? Math.round(((z.busy + z.maintenance) / z.total) * 100) : 0
+    }));
+  }, [computers]);
 
-  if (error) {
-    return (
-      <Alert
-        message="Ошибка загрузки"
-        description={String(error)}
-        type="error"
-        showIcon
-        action={
-          <Button size="small" onClick={() => dispatch(fetchDashboardStats())}>
-            Повторить
-          </Button>
-        }
-      />
-    );
-  }
+// Топ товаров
+const topProducts = useMemo(() => {
+  const filtered = sales.filter(s => inPeriod(s.date, topPeriod));
+  const map = {};
+  
+  filtered.forEach(s => {
+    const id = s.product_id;
+    // Берём название из связанной таблицы products
+    const name = s.products?.name || `Товар #${id}`;
+    
+    if (!map[id]) {
+      map[id] = { id, name, total: 0, count: 0 };
+    }
+    map[id].total += s.total_price || 0;
+    map[id].count += s.quantity || 0;
+  });
+  
+  return Object.values(map)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+}, [sales, topPeriod]);
+
+// Топ пользователей по депозитам
+const topDepositors = useMemo(() => {
+  const filtered = replenishments.filter(r => inPeriod(r.date, topPeriod));
+  const map = {};
+  
+  filtered.forEach(r => {
+    const uid = r.user_id;
+    // Берём логин из связанной таблицы users
+    const name = r.users?.login || r.users?.name || `Пользователь #${uid}`;
+    
+    if (!map[uid]) {
+      map[uid] = { id: uid, name, total: 0 };
+    }
+    map[uid].total += r.amount || 0;
+  });
+  
+  return Object.values(map)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+}, [replenishments, topPeriod]);
+
+  const productColumns = [
+    { title: 'Товар', dataIndex: 'name', key: 'name' },
+    { title: 'Продано', dataIndex: 'count', key: 'count', width: 80 },
+    { title: 'Сумма', dataIndex: 'total', key: 'total', width: 100, render: v => `${v} ₽` },
+  ];
+
+  const depositorColumns = [
+    { title: 'Пользователь', dataIndex: 'name', key: 'name' },
+    { title: 'Депозит', dataIndex: 'total', key: 'total', width: 100, render: v => `${v} ₽` },
+  ];
 
   return (
-    <div>
-      {/* Заголовок */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>
-          🏠 Дашборд
-        </Title>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={() => dispatch(fetchDashboardStats())}
-          loading={isLoading}
-        >
-          Обновить
-        </Button>
-      </div>
+    <Spin spinning={isLoading}>
+      <div>
+        <Title level={2} style={{ marginBottom: 24 }}>📊 Дашборд</Title>
 
-      <Spin spinning={isLoading}>
-        {/* Основные показатели */}
+        {/* Верхняя линейка */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={8}>
             <Card>
               <Statistic
-                title="Сегодня выручка"
-                value={stats.todayTotal}
+                title={<span><RiseOutlined /> Выручка сегодня</span>}
+                value={todayTotal}
                 suffix="₽"
-                prefix={<RiseOutlined />}
-                valueStyle={{ color: '#52c41a', fontSize: 28 }}
+                valueStyle={{ color: '#389e0d', fontWeight: 700 }}
+              />
+              <div style={{ marginTop: 12, display: 'flex', gap: 24 }}>
+                <div><Text type="secondary">💵 Наличные</Text><br /><strong>{todayCash} ₽</strong></div>
+                <div><Text type="secondary">💳 Карта</Text><br /><strong>{todayCard} ₽</strong></div>
+              </div>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card>
+              <Statistic
+                title={<span><UserOutlined /> Пользователи</span>}
+                value={totalUsers}
+                valueStyle={{ fontWeight: 700 }}
               />
               <div style={{ marginTop: 8 }}>
-                <Typography.Text type="secondary">
-                  Продажи: {stats.todaySales} ₽ | Сессии: {stats.todaySessions} ₽
-                </Typography.Text>
+                <Text type="secondary">🆕 Новых сегодня: {newUsersToday}</Text>
               </div>
             </Card>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Компьютеры"
-                value={stats.occupiedComputers}
-                suffix={`/ ${stats.totalComputers}`}
-                prefix={<DesktopOutlined />}
-              />
-              <Progress
-                percent={stats.occupancyRate}
-                size="small"
-                strokeColor="#1677ff"
-                style={{ marginTop: 8 }}
-              />
-              <Typography.Text type="secondary">
-                Свободно: {stats.freeComputers}
-              </Typography.Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Пользователи"
-                value={stats.totalUsers}
-                prefix={<UserOutlined />}
-              />
-              <Typography.Text type="secondary">
-                В игре: {stats.activeUsers}
-              </Typography.Text>
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Баланс клиентов"
-                value={stats.totalBalance}
-                suffix="₽"
-                prefix={<WalletOutlined />}
-                valueStyle={{ color: '#1677ff' }}
-              />
-            </Card>
-          </Col>
         </Row>
 
-        {/* График доходов */}
+        {/* График + загрузка зон */}
         <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={24}>
-            <ErrorBoundary>
+          <Col xs={24} lg={16}>
             <RevenueChart
-                sales={sales}
-                sessions={sessions}
-                dateRange={dateRange}
-                onDateRangeChange={(value) => dispatch(setDateRange(value))}
+              sales={sales}
+              replenishments={replenishments}
+              period={period}
+              setPeriod={p => dispatch(setPeriod(p))}
             />
-            </ErrorBoundary>
-        </Col>
+          </Col>
+          <Col xs={24} lg={8}>
+            <Card title="📈 Загрузка по зонам">
+              {zones.map(z => (
+                <div key={z.name} style={{ marginBottom: 20 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <strong>{z.name}</strong>
+                    <span>
+                      {z.used} / {z.total}
+                      {z.maintenance > 0 && <span style={{ marginLeft: 8, color: '#faad14' }}>🔧{z.maintenance}</span>}
+                    </span>
+                  </div>
+                  <Progress
+                    percent={z.percent}
+                    status={z.percent > 80 ? 'exception' : 'active'}
+                    strokeColor={
+                      z.name === 'Стандарт' ? '#1677ff' :
+                      z.name === 'VIP' ? '#faad14' : '#52c41a'
+                    }
+                  />
+                </div>
+              ))}
+            </Card>
+          </Col>
         </Row>
 
-        {/* Дополнительная информация */}
+        {/* Топы */}
         <Row gutter={16}>
           <Col xs={24} lg={12}>
-            <Card title="💻 Статус компьютеров">
-              <Row gutter={[16, 16]}>
-                <Col span={8}>
-                  <div style={{ textAlign: 'center' }}>
-                    <Tag color="green" style={{ fontSize: 16, padding: '8px 16px' }}>
-                      Свободно: {stats.freeComputers}
-                    </Tag>
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <div style={{ textAlign: 'center' }}>
-                    <Tag color="blue" style={{ fontSize: 16, padding: '8px 16px' }}>
-                      Занято: {stats.occupiedComputers}
-                    </Tag>
-                  </div>
-                </Col>
-                <Col span={8}>
-                  <div style={{ textAlign: 'center' }}>
-                    <Tag color="orange" style={{ fontSize: 16, padding: '8px 16px' }}>
-                      Обслуживание: {stats.totalComputers - stats.freeComputers - stats.occupiedComputers}
-                    </Tag>
-                  </div>
-                </Col>
-              </Row>
-              
-              <div style={{ marginTop: 24 }}>
-                <Title level={5}>Активные сессии</Title>
-                {sessions.filter(s => s.status === 'active').length > 0 ? (
-                  sessions.filter(s => s.status === 'active').slice(0, 5).map(session => (
-                    <div key={session.id} style={{ marginBottom: 8 }}>
-                      <Space>
-                        <Tag color="processing">ПК #{session.computer_id}</Tag>
-                        <span>начало: {new Date(session.start_time).toLocaleTimeString('ru-RU')}</span>
-                      </Space>
-                    </div>
-                  ))
-                ) : (
-                  <Typography.Text type="secondary">Нет активных сессий</Typography.Text>
-                )}
-              </div>
+            <Card
+              title="🏆 Топ товаров"
+              extra={
+                <Radio.Group value={topPeriod} onChange={e => setTopPeriod(e.target.value)} size="small" buttonStyle="solid">
+                  <Radio.Button value="today">Сегодня</Radio.Button>
+                  <Radio.Button value="week">Неделя</Radio.Button>
+                  <Radio.Button value="month">Месяц</Radio.Button>
+                  <Radio.Button value="year">Год</Radio.Button>
+                </Radio.Group>
+              }
+            >
+              <Table dataSource={topProducts} columns={productColumns} rowKey="id" pagination={false} size="small" />
             </Card>
           </Col>
-          
           <Col xs={24} lg={12}>
-            <Card title={<span><ShoppingCartOutlined /> Топ продаж</span>}>
-              {topProducts.length > 0 ? (
-                topProducts.map((product, index) => (
-                  <div key={product.id} style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>
-                        <Tag color={index === 0 ? 'gold' : 'default'}>#{index + 1}</Tag>
-                        Товар #{product.id}
-                      </span>
-                      <span>
-                        <strong>{product.revenue.toLocaleString()} ₽</strong>
-                        <Typography.Text type="secondary" style={{ marginLeft: 16 }}>
-                          ({product.quantity} шт.)
-                        </Typography.Text>
-                      </span>
-                    </div>
-                    <Progress
-                      percent={Math.round((product.revenue / (topProducts[0]?.revenue || 1)) * 100)}
-                      size="small"
-                      showInfo={false}
-                      strokeColor={index === 0 ? '#faad14' : '#1677ff'}
-                    />
-                  </div>
-                ))
-              ) : (
-                <Typography.Text type="secondary">Нет данных о продажах</Typography.Text>
-              )}
+            <Card
+              title="👑 Топ по депозитам"
+              extra={
+                <Radio.Group value={topPeriod} onChange={e => setTopPeriod(e.target.value)} size="small" buttonStyle="solid">
+                  <Radio.Button value="today">Сегодня</Radio.Button>
+                  <Radio.Button value="week">Неделя</Radio.Button>
+                  <Radio.Button value="month">Месяц</Radio.Button>
+                  <Radio.Button value="year">Год</Radio.Button>
+                </Radio.Group>
+              }
+            >
+              <Table dataSource={topDepositors} columns={depositorColumns} rowKey="id" pagination={false} size="small" />
             </Card>
           </Col>
         </Row>
-      </Spin>
-    </div>
+      </div>
+    </Spin>
   );
 }
 
