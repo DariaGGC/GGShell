@@ -13,20 +13,19 @@ const apiClient = axios.create({
   },
 });
 
-// Перехватчик запросов
+// Помогает отслеживать запросы при отладке
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Перехватчик ответов
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('❌ API Error:', error.response?.data || error.message);
+    console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );

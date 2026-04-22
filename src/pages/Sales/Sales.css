@@ -1,0 +1,20 @@
+.sales-page .sales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cart-card {
+  margin-bottom: 24px;
+}
+
+.cart-actions {
+  margin-top: 24px;
+  text-align: right;
+}
+
+.empty-products {
+  text-align: center;
+  padding: 40px;
+}

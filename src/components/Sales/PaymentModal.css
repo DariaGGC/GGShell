@@ -1,0 +1,31 @@
+.cart-summary {
+  margin-bottom: 24px;
+}
+
+.cart-item {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.cart-item-price {
+  float: right;
+}
+
+.cart-divider {
+  margin: 12px 0;
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cart-total-price {
+  color: #52c41a;
+}
+
+.modal-actions {
+  margin-bottom: 0;
+  text-align: right;
+}

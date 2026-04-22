@@ -1,0 +1,42 @@
+.computers-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.computers-page .stats-row {
+  margin-bottom: 24px;
+}
+
+.computers-page .filter-card {
+  margin-bottom: 16px;
+}
+
+.computers-page .filter-divider {
+  margin-left: 16px;
+}
+
+.pc-number {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1677ff;
+  background: #e6f4ff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.balance-ok {
+  color: #52c41a;
+  font-weight: bold;
+}
+
+.balance-low {
+  color: #ff4d4f;
+  font-weight: bold;
+}
+
+.btn-return {
+  background-color: #52c41a;
+  border-color: #52c41a;
+}

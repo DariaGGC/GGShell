@@ -3,50 +3,31 @@ import { Card, Radio, Typography, DatePicker, Space, Button, Tag } from 'antd';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import dayjs from 'dayjs';
 import locale from 'antd/es/date-picker/locale/ru_RU';
+import './RevenueChart.css';
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 const PERIODS = { week: 'Неделя', month: 'Месяц', year: 'Год' };
 
-// Кастомный тултип
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
 
   const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
 
   return (
-    <div style={{
-      background: 'white',
-      padding: '12px 16px',
-      borderRadius: 8,
-      border: '1px solid #d9d9d9',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-    }}>
-      <div style={{ fontWeight: 'bold', marginBottom: 8 }}>{label}</div>
+    <div className="chart-tooltip">
+      <div className="tooltip-label">{label}</div>
       {payload.map((entry, index) => (
-        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{
-            display: 'inline-block',
-            width: 12,
-            height: 12,
-            borderRadius: 2,
-            backgroundColor: entry.color
-          }} />
-          <span style={{ flex: 1 }}>{entry.name}:</span>
-          <span style={{ fontWeight: 500 }}>{entry.value?.toLocaleString()} ₽</span>
+        <div key={index} className="tooltip-item">
+          <span className="tooltip-color" style={{ backgroundColor: entry.color }} />
+          <span className="tooltip-name">{entry.name}:</span>
+          <span className="tooltip-value">{entry.value?.toLocaleString()} ₽</span>
         </div>
       ))}
-      <div style={{
-        marginTop: 8,
-        paddingTop: 8,
-        borderTop: '1px solid #e8e8e8',
-        display: 'flex',
-        justifyContent: 'space-between',
-        fontWeight: 'bold'
-      }}>
+      <div className="tooltip-total">
         <span>Всего:</span>
-        <span style={{ color: '#389e0d' }}>{total.toLocaleString()} ₽</span>
+        <span>{total.toLocaleString()} ₽</span>
       </div>
     </div>
   );
@@ -60,12 +41,8 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
     const d = dayjs(date);
     if (d.isBefore(startDate) || d.isAfter(endDate)) return -1;
     
-    if (intervalType === 'day') {
-      return d.diff(startDate, 'day');
-    }
-    if (intervalType === 'month') {
-      return d.diff(startDate, 'month');
-    }
+    if (intervalType === 'day') return d.diff(startDate, 'day');
+    if (intervalType === 'month') return d.diff(startDate, 'month');
     return -1;
   };
 
@@ -77,8 +54,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
       endDate = dayjs(customRange[1]).endOf('day');
       const days = endDate.diff(startDate, 'day') + 1;
       
-      if (days <= 31) intervalType = 'day';
-      else intervalType = 'month';
+      intervalType = days <= 31 ? 'day' : 'month';
     } else {
       const now = dayjs();
       endDate = now.endOf('day');
@@ -90,13 +66,11 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
         startDate = now.subtract(29, 'day').startOf('day');
         intervalType = 'day';
       } else {
-        // year
         startDate = now.subtract(11, 'month').startOf('month');
         intervalType = 'month';
       }
     }
 
-    // Генерация labels
     const labelArray = [];
     let current = startDate;
     
@@ -106,7 +80,6 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
         current = current.add(1, 'day');
       }
     } else {
-      // month
       while (current.isBefore(endDate) || current.isSame(endDate, 'month')) {
         labelArray.push(current.format('MMM YY'));
         current = current.add(1, 'month');
@@ -121,7 +94,6 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
       refillCard: 0 
     }));
 
-    // Продажи
     sales.forEach(s => {
       if (!s.date) return;
       const idx = getIndex(s.date, startDate, endDate, intervalType);
@@ -135,7 +107,6 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
       }
     });
 
-    // Пополнения
     replenishments.forEach(r => {
       if (!r.date) return;
       const idx = getIndex(r.date, startDate, endDate, intervalType);
@@ -157,10 +128,10 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
   return (
     <Card
       title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="chart-header">
           <Space>
-            <Title level={4} style={{ margin: 0 }}>📊 Доходы</Title>
-            <Tag color="green" style={{ fontSize: 16, padding: '4px 12px' }}>
+            <Title level={4} className="chart-title">📊 Доходы</Title>
+            <Tag color="green" className="chart-total-tag">
               {totalRevenue.toLocaleString()} ₽
             </Tag>
           </Space>
@@ -186,7 +157,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
                   }
                 }}
                 size="small"
-                style={{ marginLeft: 8 }}
+                className="chart-range-picker"
               />
             </>
           ) : (
@@ -198,14 +169,12 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
                 onChange={(dates) => setCustomRange(dates)}
                 size="small"
               />
-              <Button size="small" onClick={() => setMode('preset')}>
-                Сбросить
-              </Button>
+              <Button size="small" onClick={() => setMode('preset')}>Сбросить</Button>
             </Space>
           )}
         </Space>
       }
-      style={{ height: '100%' }}
+      className="revenue-card"
     >
       {totalRevenue > 0 ? (
         <ResponsiveContainer width="100%" height={300}>
@@ -222,9 +191,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
           </BarChart>
         </ResponsiveContainer>
       ) : (
-        <div style={{ textAlign: 'center', padding: 40, color: '#8c8c8c' }}>
-          Нет данных за выбранный период
-        </div>
+        <div className="chart-empty">Нет данных за выбранный период</div>
       )}
     </Card>
   );

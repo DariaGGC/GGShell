@@ -10,14 +10,9 @@ import {
 import { fetchDashboardStats, setPeriod } from '../../store/slices/dashboardSlice';
 import RevenueChart from '../../components/Dashboard/RevenueChart';
 import dayjs from 'dayjs';
+import './Dashboard.css';
 
 const { Title, Text } = Typography;
-
-const cardStyle = {
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-};
 
 function DashboardPage() {
   const dispatch = useDispatch();
@@ -37,7 +32,6 @@ function DashboardPage() {
     dispatch(fetchDashboardStats());
   }, [dispatch]);
 
-  // Проверка вхождения даты в период (для топов)
   const inPeriod = (date, periodType) => {
     if (!date) return false;
     const d = dayjs(date);
@@ -49,11 +43,9 @@ function DashboardPage() {
     return true;
   };
 
-  // ==================== ВЫРУЧКА СЕГОДНЯ ====================
   const today = dayjs().format('YYYY-MM-DD');
   const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
 
-  // Сегодня
   const todaySalesCash = sales
     .filter(s => s.date === today && s.payment_methods?.name?.toLowerCase().includes('нал'))
     .reduce((sum, s) => sum + (s.total_price || 0), 0);
@@ -74,7 +66,6 @@ function DashboardPage() {
   const todayCard = todaySalesCard + todayReplenishmentCard;
   const todayTotal = todayCash + todayCard;
 
-  // Вчера
   const yesterdaySalesCash = sales
     .filter(s => s.date === yesterday && s.payment_methods?.name?.toLowerCase().includes('нал'))
     .reduce((sum, s) => sum + (s.total_price || 0), 0);
@@ -95,38 +86,34 @@ function DashboardPage() {
   const yesterdayCard = yesterdaySalesCard + yesterdayReplenishmentCard;
   const yesterdayTotal = yesterdayCash + yesterdayCard;
 
-  // Сравнение с вчера
-  const revenueChange = yesterdayTotal > 0 
+  const revenueChange = yesterdayTotal > 0
     ? Math.round(((todayTotal - yesterdayTotal) / yesterdayTotal) * 100)
     : 0;
-  const cashChange = yesterdayCash > 0 
+  const cashChange = yesterdayCash > 0
     ? Math.round(((todayCash - yesterdayCash) / yesterdayCash) * 100)
     : 0;
-  const cardChange = yesterdayCard > 0 
+  const cardChange = yesterdayCard > 0
     ? Math.round(((todayCard - yesterdayCard) / yesterdayCard) * 100)
     : 0;
 
-  // ==================== ПОЛЬЗОВАТЕЛИ ====================
   const totalUsers = users.length;
 
-  // Новые пользователи
-  const newUsersToday = users.filter(u => 
+  const newUsersToday = users.filter(u =>
     u.created_at && dayjs(u.created_at).isSame(dayjs(), 'day')
   ).length;
 
-  const newUsersWeek = users.filter(u => 
+  const newUsersWeek = users.filter(u =>
     u.created_at && dayjs(u.created_at).isAfter(dayjs().subtract(7, 'day'))
   ).length;
 
-  const newUsersMonth = users.filter(u => 
+  const newUsersMonth = users.filter(u =>
     u.created_at && dayjs(u.created_at).isAfter(dayjs().subtract(30, 'day'))
   ).length;
 
-  const newUsersYear = users.filter(u => 
+  const newUsersYear = users.filter(u =>
     u.created_at && dayjs(u.created_at).isAfter(dayjs().subtract(365, 'day'))
   ).length;
 
-  // Предыдущие периоды
   const prevDayUsers = users.filter(u => {
     if (!u.created_at) return false;
     const d = dayjs(u.created_at);
@@ -174,7 +161,6 @@ function DashboardPage() {
   const monthTrend = getTrend(newUsersMonth, prevMonthUsers);
   const yearTrend = getTrend(newUsersYear, prevYearUsers);
 
-  // Активные vs Неактивные
   const activeUsers = users.filter(u => {
     const lastActive = u.lastVisitDate || u.activeSession?.start_time || u.created_at;
     if (!lastActive) return false;
@@ -187,43 +173,36 @@ function DashboardPage() {
     return dayjs(lastActive).isBefore(dayjs().subtract(30, 'day'));
   }).length;
 
-  // Последняя регистрация
-const lastRegistration = useMemo(() => {
-  const sortedUsers = [...users].sort((a, b) => {
-    return dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf();
-  });
-  const lastUser = sortedUsers[0];
-  if (!lastUser?.created_at) return '—';
-  return dayjs(lastUser.created_at).format('DD.MM HH:mm');
-}, [users]);
+  const lastRegistration = useMemo(() => {
+    const sortedUsers = [...users].sort((a, b) => dayjs(b.created_at).valueOf() - dayjs(a.created_at).valueOf());
+    const lastUser = sortedUsers[0];
+    if (!lastUser?.created_at) return '—';
+    return dayjs(lastUser.created_at).format('DD.MM HH:mm');
+  }, [users]);
 
-// Средний депозит активных пользователей
-const avgActiveDeposit = useMemo(() => {
-  if (activeUsers === 0) return 0;
-  const activeUsersList = users.filter(u => {
-    const lastActive = u.lastVisitDate || u.activeSession?.start_time || u.created_at;
-    if (!lastActive) return false;
-    return dayjs(lastActive).isAfter(dayjs().subtract(7, 'day'));
-  });
-  const totalBalance = activeUsersList.reduce((sum, u) => sum + (u.balance || 0), 0);
-  return Math.round(totalBalance / activeUsers);
-}, [users, activeUsers]);
+  const avgActiveDeposit = useMemo(() => {
+    if (activeUsers === 0) return 0;
+    const activeUsersList = users.filter(u => {
+      const lastActive = u.lastVisitDate || u.activeSession?.start_time || u.created_at;
+      if (!lastActive) return false;
+      return dayjs(lastActive).isAfter(dayjs().subtract(7, 'day'));
+    });
+    const totalBalance = activeUsersList.reduce((sum, u) => sum + (u.balance || 0), 0);
+    return Math.round(totalBalance / activeUsers);
+  }, [users, activeUsers]);
 
-  // ==================== ЗАГРУЗКА ПО ЗОНАМ ====================
   const zones = useMemo(() => {
     const zoneMap = {
       1: { name: 'Стандарт', total: 0, busy: 0, maintenance: 0 },
       2: { name: 'VIP', total: 0, busy: 0, maintenance: 0 },
       3: { name: 'Буткемп', total: 0, busy: 0, maintenance: 0 },
     };
-    
     computers.forEach(c => {
       if (!zoneMap[c.zone_id]) return;
       zoneMap[c.zone_id].total++;
       if (c.status === 'Занят') zoneMap[c.zone_id].busy++;
       if (c.status === 'Обслуживание') zoneMap[c.zone_id].maintenance++;
     });
-    
     return Object.values(zoneMap).map(z => ({
       ...z,
       used: z.busy + z.maintenance,
@@ -231,22 +210,16 @@ const avgActiveDeposit = useMemo(() => {
     }));
   }, [computers]);
 
-  // ==================== ПОПУЛЯРНОСТЬ ЗОН ====================
   const zonePopularity = useMemo(() => {
     const todayStr = dayjs().format('YYYY-MM-DD');
     const zoneSessions = { 1: 0, 2: 0, 3: 0 };
-    
     sessions.forEach(session => {
       if (session.start_time && dayjs(session.start_time).format('YYYY-MM-DD') === todayStr) {
         const zoneId = session.computers?.zone_id;
-        if (zoneId && zoneSessions[zoneId] !== undefined) {
-          zoneSessions[zoneId]++;
-        }
+        if (zoneId && zoneSessions[zoneId] !== undefined) zoneSessions[zoneId]++;
       }
     });
-    
     const total = zoneSessions[1] + zoneSessions[2] + zoneSessions[3];
-    
     return {
       1: { sessions: zoneSessions[1], percent: total ? Math.round((zoneSessions[1] / total) * 100) : 0 },
       2: { sessions: zoneSessions[2], percent: total ? Math.round((zoneSessions[2] / total) * 100) : 0 },
@@ -255,42 +228,31 @@ const avgActiveDeposit = useMemo(() => {
     };
   }, [sessions]);
 
-  // ==================== ТОП ТОВАРОВ ====================
   const topProducts = useMemo(() => {
     const filtered = sales.filter(s => inPeriod(s.date, topPeriod));
     const map = {};
-    
     filtered.forEach(s => {
       const id = s.product_id;
       const name = s.products?.name || `Товар #${id}`;
-      
-      if (!map[id]) {
-        map[id] = { id, name, total: 0, count: 0 };
-      }
+      if (!map[id]) map[id] = { id, name, total: 0, count: 0 };
       map[id].total += s.total_price || 0;
       map[id].count += s.quantity || 0;
     });
-    
     return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 5);
   }, [sales, topPeriod]);
 
-  // ==================== ТОП ПО ДЕПОЗИТАМ ====================
   const topDepositors = useMemo(() => {
     const filtered = replenishments.filter(r => inPeriod(r.date, topPeriod));
     const map = {};
-    
     filtered.forEach(r => {
       const uid = r.user_id;
       const name = r.users?.login || r.users?.name || `Пользователь #${uid}`;
-      
       if (!map[uid]) map[uid] = { id: uid, name, total: 0 };
       map[uid].total += r.amount || 0;
     });
-    
     return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 5);
   }, [replenishments, topPeriod]);
 
-  // ==================== КОЛОНКИ ТАБЛИЦ ====================
   const productColumns = [
     { title: 'Товар', dataIndex: 'name', key: 'name' },
     { title: 'Продано', dataIndex: 'count', key: 'count', width: 80 },
@@ -302,67 +264,58 @@ const avgActiveDeposit = useMemo(() => {
     { title: 'Депозит', dataIndex: 'total', key: 'total', width: 100, render: v => `${v?.toLocaleString() || 0} ₽` },
   ];
 
-  // ==================== РЕНДЕР ====================
   return (
     <Spin spinning={isLoading}>
-      <div>
-        <Title level={2} style={{ marginBottom: 24 }}>📊 Дашборд</Title>
+      <div className="dashboard-page">
+        <Title level={2} className="dashboard-title">📊 Дашборд</Title>
 
-        {/* ВЕРХНЯЯ ЛИНЕЙКА */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          {/* Выручка сегодня */}
+        <Row gutter={16} className="dashboard-top-row">
           <Col xs={24} sm={12} lg={12}>
-            <Card style={cardStyle}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8 }}>
+            <Card className="dashboard-card">
+              <div className="revenue-block">
+                <div className="revenue-main">
+                  <div className="revenue-header">
                     <Statistic
                       title={<span><RiseOutlined /> Выручка сегодня</span>}
                       value={todayTotal}
                       suffix="₽"
                       valueStyle={{ color: '#389e0d', fontWeight: 700 }}
                     />
-                    <span style={{ 
-                      color: revenueChange >= 0 ? '#52c41a' : '#ff4d4f', 
-                      fontSize: 18, 
-                      fontWeight: 600 
-                    }}>
+                    <span className={`revenue-change ${revenueChange >= 0 ? 'positive' : 'negative'}`}>
                       {revenueChange >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {Math.abs(revenueChange)}%
                     </span>
                   </div>
-                  <div style={{ marginTop: 8 }}>
-                    <div>
+                  <div className="revenue-details">
+                    <div className="revenue-cash">
                       <Text type="secondary">💵 Наличные</Text><br />
                       <strong>{todayCash.toLocaleString()} ₽</strong>
-                      <span style={{ marginLeft: 12, color: cashChange >= 0 ? '#52c41a' : '#ff4d4f', fontSize: 14 }}>
+                      <span className={`trend ${cashChange >= 0 ? 'positive' : 'negative'}`}>
                         {cashChange >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {Math.abs(cashChange)}%
                       </span>
-                      <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+                      <div className="revenue-breakdown">
                         Продажи: {todaySalesCash.toLocaleString()} ₽ · Пополнения: {todayReplenishmentCash.toLocaleString()} ₽
                       </div>
                     </div>
-                    <div style={{ marginTop: 12 }}>
+                    <div className="revenue-card-item">
                       <Text type="secondary">💳 Карта</Text><br />
                       <strong>{todayCard.toLocaleString()} ₽</strong>
-                      <span style={{ marginLeft: 12, color: cardChange >= 0 ? '#52c41a' : '#ff4d4f', fontSize: 14 }}>
+                      <span className={`trend ${cardChange >= 0 ? 'positive' : 'negative'}`}>
                         {cardChange >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {Math.abs(cardChange)}%
                       </span>
-                      <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+                      <div className="revenue-breakdown">
                         Продажи: {todaySalesCard.toLocaleString()} ₽ · Пополнения: {todayReplenishmentCard.toLocaleString()} ₽
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                <div style={{ width: 1, height: 130, background: '#f0f0f0' }} />
-                
-                <div style={{ minWidth: 120 }}>
-                  <Text type="secondary" style={{ fontSize: 14, fontWeight: 500 }}>Вчера</Text>
-                  <div style={{ marginTop: 8 }}>
-                    <Text strong style={{ fontSize: 20 }}>{yesterdayTotal.toLocaleString()} ₽</Text>
-                    <div style={{ marginTop: 12, fontSize: 14 }}>
+                <div className="revenue-divider" />
+                <div className="revenue-yesterday">
+                  <Text type="secondary" className="yesterday-label">Вчера</Text>
+                  <div className="yesterday-content">
+                    <Text strong className="yesterday-total">{yesterdayTotal.toLocaleString()} ₽</Text>
+                    <div className="yesterday-details">
                       <div>💵 {yesterdayCash.toLocaleString()} ₽</div>
-                      <div style={{ marginTop: 4 }}>💳 {yesterdayCard.toLocaleString()} ₽</div>
+                      <div>💳 {yesterdayCard.toLocaleString()} ₽</div>
                     </div>
                   </div>
                 </div>
@@ -370,104 +323,66 @@ const avgActiveDeposit = useMemo(() => {
             </Card>
           </Col>
 
-{/* Пользователи */}
-<Col xs={24} sm={12} lg={12}>
-  <Card style={cardStyle}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-      {/* Левая часть — Пользователи (по центру) */}
-      <div style={{ textAlign: 'center', minWidth: 100 }}>
-        <Text type="secondary" style={{ fontSize: 14 }}>
-          <UserOutlined /> Пользователи
-        </Text>
-        <div style={{ fontSize: 36, fontWeight: 700, lineHeight: 1.2 }}>
-          {totalUsers}
-        </div>
-      </div>
+          <Col xs={24} sm={12} lg={12}>
+            <Card className="dashboard-card">
+              <div className="users-block">
+                <div className="users-header">
+                  <div className="users-total">
+                    <Text type="secondary"><UserOutlined /> Пользователи</Text>
+                    <div className="users-count">{totalUsers}</div>
+                  </div>
+                  <div className="users-activity">
+                    <div className="activity-item">
+                      <Text type="secondary">🟢 Активные (7 дн)</Text>
+                      <div className="activity-value active">{activeUsers}</div>
+                    </div>
+                    <div className="activity-item">
+                      <Text type="secondary">🔴 Неактивные (30+ дн)</Text>
+                      <div className="activity-value inactive">{inactiveUsers}</div>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Правая часть — Активные / Неактивные */}
-      <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>🟢 Активные (7 дн)</Text>
-          <div style={{ fontSize: 20, fontWeight: 600, color: '#52c41a' }}>{activeUsers}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>🔴 Неактивные (30+ дн)</Text>
-          <div style={{ fontSize: 20, fontWeight: 600, color: '#ff4d4f' }}>{inactiveUsers}</div>
-        </div>
-      </div>
-    </div>
+                <div className="users-new">
+                  <Text type="secondary">🆕 Новых:</Text>
+                  <div className="new-item">
+                    <Text type="secondary">Сегодня</Text>
+                    <strong>{newUsersToday}</strong>
+                    {dayTrend.value > 0 && <span style={{ color: dayTrend.color }}>{dayTrend.arrow} {dayTrend.value}%</span>}
+                  </div>
+                  <div className="new-item">
+                    <Text type="secondary">Неделя</Text>
+                    <strong>{newUsersWeek}</strong>
+                    {weekTrend.value > 0 && <span style={{ color: weekTrend.color }}>{weekTrend.arrow} {weekTrend.value}%</span>}
+                  </div>
+                  <div className="new-item">
+                    <Text type="secondary">Месяц</Text>
+                    <strong>{newUsersMonth}</strong>
+                    {monthTrend.value > 0 && <span style={{ color: monthTrend.color }}>{monthTrend.arrow} {monthTrend.value}%</span>}
+                  </div>
+                  <div className="new-item">
+                    <Text type="secondary">Год</Text>
+                    <strong>{newUsersYear}</strong>
+                    {yearTrend.value > 0 && <span style={{ color: yearTrend.color }}>{yearTrend.arrow} {yearTrend.value}%</span>}
+                  </div>
+                </div>
 
-    {/* Средняя строка: новых за периоды с трендами */}
-    <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-      <Text type="secondary" style={{ fontSize: 13 }}>🆕 Новых:</Text>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <Text type="secondary">Сегодня</Text>
-        <strong>{newUsersToday}</strong>
-        {dayTrend.value > 0 && (
-          <span style={{ color: dayTrend.color, fontSize: 12 }}>
-            {dayTrend.arrow} {dayTrend.value}%
-          </span>
-        )}
-      </div>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <Text type="secondary">Неделя</Text>
-        <strong>{newUsersWeek}</strong>
-        {weekTrend.value > 0 && (
-          <span style={{ color: weekTrend.color, fontSize: 12 }}>
-            {weekTrend.arrow} {weekTrend.value}%
-          </span>
-        )}
-      </div>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <Text type="secondary">Месяц</Text>
-        <strong>{newUsersMonth}</strong>
-        {monthTrend.value > 0 && (
-          <span style={{ color: monthTrend.color, fontSize: 12 }}>
-            {monthTrend.arrow} {monthTrend.value}%
-          </span>
-        )}
-      </div>
-      
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        <Text type="secondary">Год</Text>
-        <strong>{newUsersYear}</strong>
-        {yearTrend.value > 0 && (
-          <span style={{ color: yearTrend.color, fontSize: 12 }}>
-            {yearTrend.arrow} {yearTrend.value}%
-          </span>
-        )}
-      </div>
-    </div>
-
-    {/* Нижняя строка: последняя регистрация + средний депозит активных */}
-    <div style={{ 
-      marginTop: 16, 
-      paddingTop: 12, 
-      borderTop: '1px solid #f0f0f0',
-      display: 'flex', 
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    }}>
-      <div>
-        <Text type="secondary" style={{ fontSize: 12 }}>🕐 Последняя регистрация</Text>
-        <div style={{ fontSize: 15, fontWeight: 500 }}>{lastRegistration}</div>
-      </div>
-      <div style={{ textAlign: 'right' }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>💰 Средний депозит активных</Text>
-        <div style={{ fontSize: 15, fontWeight: 500, color: '#1677ff' }}>
-          {avgActiveDeposit.toLocaleString()} ₽
-        </div>
-      </div>
-    </div>
-  </Card>
-</Col>
+                <div className="users-footer">
+                  <div>
+                    <Text type="secondary">🕐 Последняя регистрация</Text>
+                    <div className="footer-value">{lastRegistration}</div>
+                  </div>
+                  <div>
+                    <Text type="secondary">💰 Средний депозит активных</Text>
+                    <div className="footer-value deposit">{avgActiveDeposit.toLocaleString()} ₽</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </Col>
         </Row>
 
-        {/* ГРАФИК ДОХОДОВ + ЗАГРУЗКА ПО ЗОНАМ */}
-        <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Row gutter={16} className="dashboard-middle-row">
           <Col xs={24} lg={16}>
             <RevenueChart
               sales={sales}
@@ -477,74 +392,47 @@ const avgActiveDeposit = useMemo(() => {
             />
           </Col>
           <Col xs={24} lg={8}>
-            <Card title="📈 Загрузка по зонам" style={cardStyle}>
+            <Card title="📈 Загрузка по зонам" className="dashboard-card">
               {zones.map(z => {
                 const zoneId = z.name === 'Стандарт' ? 1 : z.name === 'VIP' ? 2 : 3;
                 const popularity = zonePopularity[zoneId];
-                
                 return (
-                  <div key={z.name} style={{ marginBottom: 20 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <div key={z.name} className="zone-item">
+                    <div className="zone-header">
                       <strong>{z.name}</strong>
-                      <span>
-                        {z.used} / {z.total}
-                        {z.maintenance > 0 && (
-                          <span style={{ marginLeft: 8, color: '#faad14' }}>🔧 {z.maintenance}</span>
-                        )}
-                      </span>
+                      <span>{z.used} / {z.total}{z.maintenance > 0 && <span className="zone-maintenance">🔧 {z.maintenance}</span>}</span>
                     </div>
                     <Progress
                       percent={z.percent}
                       status={z.percent > 80 ? 'exception' : 'active'}
-                      strokeColor={
-                        z.name === 'Стандарт' ? '#1677ff' :
-                        z.name === 'VIP' ? '#faad14' : '#52c41a'
-                      }
+                      strokeColor={z.name === 'Стандарт' ? '#1677ff' : z.name === 'VIP' ? '#faad14' : '#52c41a'}
                     />
                   </div>
                 );
               })}
-              
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
-                <Text type="secondary" style={{ fontSize: 13, marginBottom: 12, display: 'block' }}>
-                  📊 Популярность сегодня ({zonePopularity.total} сессий)
-                </Text>
-                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <Tag color="blue">Стандарт</Tag>
-                    <div><strong>{zonePopularity[1].sessions}</strong></div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{zonePopularity[1].percent}%</Text>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <Tag color="gold">VIP</Tag>
-                    <div><strong>{zonePopularity[2].sessions}</strong></div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{zonePopularity[2].percent}%</Text>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <Tag color="green">Буткемп</Tag>
-                    <div><strong>{zonePopularity[3].sessions}</strong></div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>{zonePopularity[3].percent}%</Text>
-                  </div>
+              <div className="zone-popularity">
+                <Text type="secondary">📊 Популярность сегодня ({zonePopularity.total} сессий)</Text>
+                <div className="popularity-items">
+                  <div className="popularity-item"><Tag color="blue">Стандарт</Tag><strong>{zonePopularity[1].sessions}</strong><Text type="secondary">{zonePopularity[1].percent}%</Text></div>
+                  <div className="popularity-item"><Tag color="gold">VIP</Tag><strong>{zonePopularity[2].sessions}</strong><Text type="secondary">{zonePopularity[2].percent}%</Text></div>
+                  <div className="popularity-item"><Tag color="green">Буткемп</Tag><strong>{zonePopularity[3].sessions}</strong><Text type="secondary">{zonePopularity[3].percent}%</Text></div>
                 </div>
               </div>
             </Card>
           </Col>
         </Row>
 
-        {/* ТОПЫ */}
         <Row gutter={16}>
           <Col xs={24} lg={12}>
             <Card
               title="🏆 Топ товаров"
-              extra={
-                <Radio.Group value={topPeriod} onChange={e => setTopPeriod(e.target.value)} size="small" buttonStyle="solid">
-                  <Radio.Button value="today">Сегодня</Radio.Button>
-                  <Radio.Button value="week">Неделя</Radio.Button>
-                  <Radio.Button value="month">Месяц</Radio.Button>
-                  <Radio.Button value="year">Год</Radio.Button>
-                </Radio.Group>
-              }
-              style={cardStyle}
+              extra={<Radio.Group value={topPeriod} onChange={e => setTopPeriod(e.target.value)} size="small" buttonStyle="solid">
+                <Radio.Button value="today">Сегодня</Radio.Button>
+                <Radio.Button value="week">Неделя</Radio.Button>
+                <Radio.Button value="month">Месяц</Radio.Button>
+                <Radio.Button value="year">Год</Radio.Button>
+              </Radio.Group>}
+              className="dashboard-card"
             >
               <Table dataSource={topProducts} columns={productColumns} rowKey="id" pagination={false} size="small" locale={{ emptyText: 'Нет данных' }} />
             </Card>
@@ -552,15 +440,13 @@ const avgActiveDeposit = useMemo(() => {
           <Col xs={24} lg={12}>
             <Card
               title="👑 Топ по депозитам"
-              extra={
-                <Radio.Group value={topPeriod} onChange={e => setTopPeriod(e.target.value)} size="small" buttonStyle="solid">
-                  <Radio.Button value="today">Сегодня</Radio.Button>
-                  <Radio.Button value="week">Неделя</Radio.Button>
-                  <Radio.Button value="month">Месяц</Radio.Button>
-                  <Radio.Button value="year">Год</Radio.Button>
-                </Radio.Group>
-              }
-              style={cardStyle}
+              extra={<Radio.Group value={topPeriod} onChange={e => setTopPeriod(e.target.value)} size="small" buttonStyle="solid">
+                <Radio.Button value="today">Сегодня</Radio.Button>
+                <Radio.Button value="week">Неделя</Radio.Button>
+                <Radio.Button value="month">Месяц</Radio.Button>
+                <Radio.Button value="year">Год</Radio.Button>
+              </Radio.Group>}
+              className="dashboard-card"
             >
               <Table dataSource={topDepositors} columns={depositorColumns} rowKey="id" pagination={false} size="small" locale={{ emptyText: 'Нет данных' }} />
             </Card>

@@ -1,0 +1,16 @@
+.cart-table {
+  width: 100%;
+}
+
+.cart-quantity-input {
+  width: 70px;
+}
+
+.cart-footer {
+  margin-top: 16px;
+  text-align: right;
+}
+
+.cart-footer-space {
+  width: 100%;
+}

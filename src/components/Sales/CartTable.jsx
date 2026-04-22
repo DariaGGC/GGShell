@@ -1,16 +1,12 @@
 import { Table, InputNumber, Button, Space, Typography, Empty } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
+import './CartTable.css';
 
 const { Text, Title } = Typography;
 
 function CartTable({ cart, onUpdateQuantity, onRemove, onClear }) {
   if (cart.length === 0) {
-    return (
-      <Empty
-        description="Корзина пуста"
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      />
-    );
+    return <Empty description="Корзина пуста" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
   }
 
   const columns = [
@@ -38,7 +34,7 @@ function CartTable({ cart, onUpdateQuantity, onRemove, onClear }) {
           value={record.cartQuantity}
           onChange={(value) => onUpdateQuantity(record.id, value)}
           size="small"
-          style={{ width: 70 }}
+          className="cart-quantity-input"
         />
       ),
     },
@@ -66,13 +62,10 @@ function CartTable({ cart, onUpdateQuantity, onRemove, onClear }) {
     },
   ];
 
-  const totalSum = cart.reduce(
-    (sum, item) => sum + item.cartQuantity * item.price,
-    0
-  );
+  const totalSum = cart.reduce((sum, item) => sum + item.cartQuantity * item.price, 0);
 
   return (
-    <div>
+    <div className="cart-table">
       <Table
         columns={columns}
         dataSource={cart}
@@ -82,14 +75,10 @@ function CartTable({ cart, onUpdateQuantity, onRemove, onClear }) {
         scroll={{ x: 500 }}
       />
       
-      <div style={{ marginTop: 16, textAlign: 'right' }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Title level={4}>
-            Итого: {totalSum} ₽
-          </Title>
-          <Button size="small" onClick={onClear}>
-            Очистить корзину
-          </Button>
+      <div className="cart-footer">
+        <Space direction="vertical" className="cart-footer-space">
+          <Title level={4}>Итого: {totalSum} ₽</Title>
+          <Button size="small" onClick={onClear}>Очистить корзину</Button>
         </Space>
       </div>
     </div>

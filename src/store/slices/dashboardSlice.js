@@ -7,7 +7,7 @@ export const fetchDashboardStats = createAsyncThunk(
     try {
       const [salesRes, sessionsRes, computersRes, usersRes, replenishmentsRes] = await Promise.all([
         apiClient.get('/sales_journals?select=*,products(*),payment_methods(*)'),
-        apiClient.get('/sessions?select=*,computers(*),users(*)'),  // ← важно для популярности зон
+        apiClient.get('/sessions?select=*,computers(*),users(*)'),
         apiClient.get('/computers?select=*,zones(*)'),
         apiClient.get('/users?select=*'),
         apiClient.get('/replenishment_logs?select=*,payment_methods(*),users(*)')
@@ -15,13 +15,12 @@ export const fetchDashboardStats = createAsyncThunk(
 
       return {
         sales: salesRes.data || [],
-        sessions: sessionsRes.data || [],  // ← добавить в state
+        sessions: sessionsRes.data || [],
         computers: computersRes.data || [],
         users: usersRes.data || [],
         replenishments: replenishmentsRes.data || []
       };
     } catch (error) {
-      console.error('Dashboard fetch error:', error);
       return rejectWithValue(error.response?.data || 'Ошибка загрузки статистики');
     }
   }
@@ -29,30 +28,23 @@ export const fetchDashboardStats = createAsyncThunk(
 
 const dashboardSlice = createSlice({
   name: 'dashboard',
-initialState: {
-  sales: [],
-  sessions: [],  // ← добавить
-  computers: [],
-  users: [],
-  replenishments: [],
-  isLoading: false,
-  period: 'week',
-  error: null
-},
+  initialState: {
+    sales: [],
+    sessions: [],
+    computers: [],
+    users: [],
+    replenishments: [],
+    isLoading: false,
+    period: 'week',
+    error: null
+  },
   reducers: {
-    setPeriod: (state, action) => {
-      state.period = action.payload;
-    },
-    clearError: (state) => {
-      state.error = null;
-    }
+    setPeriod: (state, action) => { state.period = action.payload; },
+    clearError: (state) => { state.error = null; }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchDashboardStats.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+      .addCase(fetchDashboardStats.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(fetchDashboardStats.fulfilled, (state, action) => {
         state.isLoading = false;
         state.sales = action.payload.sales;

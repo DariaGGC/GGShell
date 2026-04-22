@@ -1,0 +1,38 @@
+.product-card {
+  height: 100%;
+  position: relative;
+}
+
+.product-card .ant-card-body {
+  padding: 16px;
+}
+
+.product-menu-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.product-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-title {
+  margin-bottom: 8px;
+  padding-right: 30px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-price {
+  font-size: 20px;
+  color: #1677ff;
+}
+
+.product-add-btn {
+  margin-top: 16px;
+}

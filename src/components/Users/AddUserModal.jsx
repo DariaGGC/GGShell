@@ -4,6 +4,7 @@ import { UserAddOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import apiClient from '../../api/client';
 import { fetchUsers } from '../../store/slices/usersSlice';
+import './AddUserModal.css';
 
 function AddUserModal({ visible, onClose }) {
   const dispatch = useDispatch();
@@ -15,7 +16,6 @@ function AddUserModal({ visible, onClose }) {
     try {
       const now = new Date().toISOString();
       
-      // Отправляем ТОЛЬКО те поля, которые есть в базе
       const userData = {
         login: values.login,
         name: values.name || `${values.lastName || ''} ${values.firstName || ''}`.trim(),
@@ -24,8 +24,6 @@ function AddUserModal({ visible, onClose }) {
         created_at: now
       };
       
-      console.log('Creating user:', userData);
-      
       await apiClient.post('/users', userData);
       
       message.success(`Пользователь "${values.login}" создан`);
@@ -33,8 +31,7 @@ function AddUserModal({ visible, onClose }) {
       dispatch(fetchUsers());
       onClose();
     } catch (error) {
-      console.error('Create user error:', error);
-      message.error('Ошибка при создании пользователя: ' + (error.response?.data?.message || ''));
+      message.error('Ошибка при создании пользователя');
     } finally {
       setLoading(false);
     }
@@ -42,23 +39,14 @@ function AddUserModal({ visible, onClose }) {
 
   return (
     <Modal
-      title={
-        <span>
-          <UserAddOutlined style={{ marginRight: 8 }} />
-          Добавить нового пользователя
-        </span>
-      }
+      title={<span><UserAddOutlined className="modal-icon" /> Добавить нового пользователя</span>}
       open={visible}
       onCancel={onClose}
       footer={null}
       destroyOnClose
       width={500}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="login"
           label="Логин"
@@ -75,19 +63,14 @@ function AddUserModal({ visible, onClose }) {
           <Input placeholder="Иванов Иван" />
         </Form.Item>
 
-        <Form.Item
-          name="phone"
-          label="Телефон"
-        >
+        <Form.Item name="phone" label="Телефон">
           <Input placeholder="+7 (999) 123-45-67" />
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+        <Form.Item className="modal-actions">
           <Space>
             <Button onClick={onClose}>Отмена</Button>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              Создать
-            </Button>
+            <Button type="primary" htmlType="submit" loading={loading}>Создать</Button>
           </Space>
         </Form.Item>
       </Form>

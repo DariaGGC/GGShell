@@ -236,22 +236,26 @@ function UsersPage() {
       </div>
 
       {/* Статистика */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Card>
-            <Statistic title="Всего пользователей" value={stats.total} />
-          </Card>
-        </Col>
-        <Col span={12}>
-          <Card>
-            <Statistic 
-              title="Регистраций за сегодня" 
-              value={stats.todayRegistrations}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+<Row gutter={16} style={{ marginBottom: 24 }}>
+  <Col span={12}>
+    <Card bodyStyle={{ padding: '12px 16px' }}>
+      <Statistic 
+        title="Всего пользователей" 
+        value={stats.total} 
+        valueStyle={{ fontSize: 24 }} 
+      />
+    </Card>
+  </Col>
+  <Col span={12}>
+    <Card bodyStyle={{ padding: '12px 16px' }}>
+      <Statistic 
+        title="Регистраций за сегодня" 
+        value={stats.todayRegistrations}
+        valueStyle={{ color: '#52c41a', fontSize: 24 }}
+      />
+    </Card>
+  </Col>
+</Row>
 
       {/* Фильтры и поиск */}
       <Card style={{ marginBottom: 16 }}>

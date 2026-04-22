@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Modal, Form, InputNumber, Select, Button, Space, Typography, message } from 'antd';
 import { WalletOutlined } from '@ant-design/icons';
+import './TopUpModal.css';
 
 const { Text } = Typography;
+
+const QUICK_AMOUNTS = [100, 500, 1000, 2000, 5000];
 
 function TopUpModal({ visible, user, paymentMethods, onClose, onSubmit }) {
   const [form] = Form.useForm();
@@ -26,7 +29,7 @@ function TopUpModal({ visible, user, paymentMethods, onClose, onSubmit }) {
     }
   };
 
-  const quickAmounts = [100, 500, 1000, 2000, 5000];
+  const balanceColor = (user?.balance || 0) > 0 ? '#52c41a' : '#ff4d4f';
 
   return (
     <Modal
@@ -41,29 +44,20 @@ function TopUpModal({ visible, user, paymentMethods, onClose, onSubmit }) {
       footer={null}
       destroyOnClose
     >
-      <div style={{ marginBottom: 24 }}>
+      <div className="topup-user-info">
         <Text type="secondary">Клиент:</Text>
-        <div style={{ fontSize: 16, fontWeight: 'bold' }}>
-          {user?.name || user?.login}
-        </div>
+        <div className="topup-user-name">{user?.name || user?.login}</div>
         <Text type="secondary">Текущий баланс:</Text>
-        <div style={{ fontSize: 18, color: (user?.balance || 0) > 0 ? '#52c41a' : '#ff4d4f' }}>
+        <div className="topup-user-balance" style={{ color: balanceColor }}>
           {user?.balance || 0} ₽
         </div>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item label="Быстрый выбор">
           <Space wrap>
-            {quickAmounts.map(amount => (
-              <Button
-                key={amount}
-                onClick={() => form.setFieldsValue({ amount })}
-              >
+            {QUICK_AMOUNTS.map(amount => (
+              <Button key={amount} onClick={() => form.setFieldsValue({ amount })}>
                 {amount} ₽
               </Button>
             ))}
@@ -80,7 +74,7 @@ function TopUpModal({ visible, user, paymentMethods, onClose, onSubmit }) {
           ]}
         >
           <InputNumber
-            style={{ width: '100%' }}
+            className="topup-amount-input"
             placeholder="Введите сумму"
             min={1}
             max={50000}
@@ -102,7 +96,7 @@ function TopUpModal({ visible, user, paymentMethods, onClose, onSubmit }) {
           </Select>
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+        <Form.Item className="modal-actions">
           <Space>
             <Button onClick={onClose}>Отмена</Button>
             <Button type="primary" htmlType="submit" loading={loading}>

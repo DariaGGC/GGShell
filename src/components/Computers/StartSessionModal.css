@@ -1,0 +1,16 @@
+.modal-icon {
+  margin-right: 8px;
+}
+
+.session-info {
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  margin-bottom: 0;
+  text-align: right;
+}
+
+.modal-actions .ant-btn {
+  margin-left: 8px;
+}

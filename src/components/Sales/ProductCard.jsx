@@ -1,5 +1,6 @@
 import { Card, Button, Tag, Space, Typography, Dropdown } from 'antd';
 import { ShoppingCartOutlined, MoreOutlined, EditOutlined } from '@ant-design/icons';
+import './ProductCard.css';
 
 const { Text, Title } = Typography;
 
@@ -16,39 +17,24 @@ function ProductCard({ product, onAddToCart, onEdit, disabled }) {
   ];
 
   return (
-    <Card
-      hoverable
-      style={{ height: '100%', position: 'relative' }}
-      bodyStyle={{ padding: 16 }}
-    >
-      {/* Кнопка меню (⋮) */}
+    <Card hoverable className="product-card">
       <Dropdown
         menu={{ items: menuItems }}
         trigger={['click']}
         placement="bottomRight"
       >
-        <Button
-          type="text"
-          icon={<MoreOutlined />}
-          style={{ position: 'absolute', top: 8, right: 8 }}
-        />
+        <Button type="text" icon={<MoreOutlined />} className="product-menu-btn" />
       </Dropdown>
 
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Title level={5} style={{ marginBottom: 8, paddingRight: 30 }}>
-          {product.name}
-        </Title>
+      <div className="product-content">
+        <Title level={5} className="product-title">{product.name}</Title>
         
-        <Space direction="vertical" size={4} style={{ flex: 1 }}>
+        <Space direction="vertical" size={4} className="product-info">
           <Text type="secondary">Цена:</Text>
-          <Text strong style={{ fontSize: 20, color: '#1677ff' }}>
-            {product.price} ₽
-          </Text>
+          <Text strong className="product-price">{product.price} ₽</Text>
           
           <Text type="secondary">В наличии:</Text>
-          <Tag color={isOutOfStock ? 'red' : 'green'}>
-            {product.quantity} шт.
-          </Tag>
+          <Tag color={isOutOfStock ? 'red' : 'green'}>{product.quantity} шт.</Tag>
         </Space>
 
         <Button
@@ -56,7 +42,7 @@ function ProductCard({ product, onAddToCart, onEdit, disabled }) {
           icon={<ShoppingCartOutlined />}
           onClick={() => onAddToCart(product)}
           disabled={disabled || isOutOfStock}
-          style={{ marginTop: 16 }}
+          className="product-add-btn"
           block
         >
           {isOutOfStock ? 'Нет в наличии' : 'В корзину'}

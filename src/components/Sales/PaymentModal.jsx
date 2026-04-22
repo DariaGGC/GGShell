@@ -1,16 +1,13 @@
-import { useState } from 'react';
 import { Modal, Form, Select, Button, Space, Typography, Divider } from 'antd';
 import { CreditCardOutlined } from '@ant-design/icons';
+import './PaymentModal.css';
 
 const { Text, Title } = Typography;
 
 function PaymentModal({ visible, cart, paymentMethods, onClose, onSubmit, loading }) {
   const [form] = Form.useForm();
 
-  const totalSum = cart.reduce(
-    (sum, item) => sum + item.cartQuantity * item.price,
-    0
-  );
+  const totalSum = cart.reduce((sum, item) => sum + item.cartQuantity * item.price, 0);
 
   const handleSubmit = (values) => {
     onSubmit(values.paymentMethodId);
@@ -30,30 +27,24 @@ function PaymentModal({ visible, cart, paymentMethods, onClose, onSubmit, loadin
       destroyOnClose
       width={500}
     >
-      <div style={{ marginBottom: 24 }}>
+      <div className="cart-summary">
         <Text type="secondary">Товары в корзине:</Text>
         {cart.map(item => (
-          <div key={item.id} style={{ marginTop: 8 }}>
+          <div key={item.id} className="cart-item">
             <Text>{item.name} × {item.cartQuantity}</Text>
-            <Text strong style={{ float: 'right' }}>
+            <Text strong className="cart-item-price">
               {item.cartQuantity * item.price} ₽
             </Text>
           </div>
         ))}
-        <Divider style={{ margin: '12px 0' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Divider className="cart-divider" />
+        <div className="cart-total">
           <Title level={5}>Итого к оплате:</Title>
-          <Title level={4} style={{ color: '#52c41a' }}>
-            {totalSum} ₽
-          </Title>
+          <Title level={4} className="cart-total-price">{totalSum} ₽</Title>
         </div>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="paymentMethodId"
           label="Способ оплаты"
@@ -68,7 +59,7 @@ function PaymentModal({ visible, cart, paymentMethods, onClose, onSubmit, loadin
           </Select>
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+        <Form.Item className="modal-actions">
           <Space>
             <Button onClick={onClose}>Отмена</Button>
             <Button type="primary" htmlType="submit" loading={loading} size="large">

@@ -1,11 +1,9 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Button, Space, message, Tabs } from 'antd';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { addStock, createProduct } from '../../store/slices/salesSlice';
-
-const { TabPane } = Tabs;
+import './StockModal.css';
 
 function StockModal({ visible, products, onClose }) {
   const dispatch = useDispatch();
@@ -14,7 +12,6 @@ function StockModal({ visible, products, onClose }) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('existing');
 
-  // Пополнение существующего товара
   const handleAddStock = async (values) => {
     setLoading(true);
     try {
@@ -33,7 +30,6 @@ function StockModal({ visible, products, onClose }) {
     }
   };
 
-  // Создание нового товара
   const handleCreateProduct = async (values) => {
     setLoading(true);
     try {
@@ -55,12 +51,7 @@ function StockModal({ visible, products, onClose }) {
 
   return (
     <Modal
-      title={
-        <span>
-          <UploadOutlined style={{ marginRight: 8 }} />
-          Приход товара
-        </span>
-      }
+      title={<span><UploadOutlined className="modal-icon" /> Приход товара</span>}
       open={visible}
       onCancel={onClose}
       footer={null}
@@ -68,14 +59,8 @@ function StockModal({ visible, products, onClose }) {
       width={500}
     >
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        {/* Вкладка: Пополнить существующий */}
         <Tabs.TabPane tab="📦 Пополнить существующий" key="existing">
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleAddStock}
-            style={{ marginTop: 16 }}
-          >
+          <Form form={form} layout="vertical" onFinish={handleAddStock} className="tab-form">
             <Form.Item
               name="productId"
               label="Выберите товар"
@@ -104,32 +89,24 @@ function StockModal({ visible, products, onClose }) {
               ]}
             >
               <InputNumber
-                style={{ width: '100%' }}
+                className="full-width-input"
                 placeholder="Введите количество"
                 min={1}
                 addonAfter="шт."
               />
             </Form.Item>
 
-            <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Form.Item className="modal-actions">
               <Space>
                 <Button onClick={onClose}>Отмена</Button>
-                <Button type="primary" htmlType="submit" loading={loading}>
-                  Пополнить
-                </Button>
+                <Button type="primary" htmlType="submit" loading={loading}>Пополнить</Button>
               </Space>
             </Form.Item>
           </Form>
         </Tabs.TabPane>
 
-        {/* Вкладка: Создать новый товар */}
         <Tabs.TabPane tab="🆕 Создать новый" key="new">
-          <Form
-            form={newProductForm}
-            layout="vertical"
-            onFinish={handleCreateProduct}
-            style={{ marginTop: 16 }}
-          >
+          <Form form={newProductForm} layout="vertical" onFinish={handleCreateProduct} className="tab-form">
             <Form.Item
               name="name"
               label="Название товара"
@@ -150,7 +127,7 @@ function StockModal({ visible, products, onClose }) {
               ]}
             >
               <InputNumber
-                style={{ width: '100%' }}
+                className="full-width-input"
                 placeholder="Цена за единицу"
                 min={1}
                 addonAfter="₽"
@@ -160,27 +137,20 @@ function StockModal({ visible, products, onClose }) {
             <Form.Item
               name="quantity"
               label="Начальное количество"
-              rules={[
-                { type: 'number', min: 0, message: 'Минимум 0 шт.' }
-              ]}
+              rules={[{ type: 'number', min: 0, message: 'Минимум 0 шт.' }]}
             >
               <InputNumber
-                style={{ width: '100%' }}
+                className="full-width-input"
                 placeholder="0"
                 min={0}
                 addonAfter="шт."
               />
             </Form.Item>
 
-            <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+            <Form.Item className="modal-actions">
               <Space>
                 <Button onClick={onClose}>Отмена</Button>
-                <Button 
-                  type="primary" 
-                  htmlType="submit" 
-                  loading={loading}
-                  icon={<PlusOutlined />}
-                >
+                <Button type="primary" htmlType="submit" loading={loading} icon={<PlusOutlined />}>
                   Создать товар
                 </Button>
               </Space>

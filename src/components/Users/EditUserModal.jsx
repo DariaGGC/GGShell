@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Space, message, Typography, Divider } from 
 import { EditOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { updateUser } from '../../store/slices/usersSlice';
+import './EditUserModal.css';
 
 const { Text } = Typography;
 
@@ -13,8 +14,6 @@ function EditUserModal({ visible, user, onClose }) {
 
   useEffect(() => {
     if (user && visible) {
-      console.log('Editing user:', user);
-      
       form.setFieldsValue({
         login: user.login || '',
         name: user.name || '',
@@ -38,13 +37,11 @@ function EditUserModal({ visible, user, onClose }) {
       onClose();
     } catch (error) {
       message.error('Ошибка при обновлении пользователя');
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Форматирование даты и времени
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указано';
     try {
@@ -75,50 +72,35 @@ function EditUserModal({ visible, user, onClose }) {
 
   return (
     <Modal
-      title={
-        <span>
-          <EditOutlined style={{ marginRight: 8 }} />
-          Редактировать пользователя
-        </span>
-      }
+      title={<span><EditOutlined className="modal-icon" /> Редактировать пользователя</span>}
       open={visible}
       onCancel={onClose}
       footer={null}
       destroyOnClose
       width={500}
     >
-      {/* Информация о регистрации */}
-      <div style={{ 
-        background: '#f5f5f5', 
-        padding: 16, 
-        borderRadius: 8, 
-        marginBottom: 20 
-      }}>
-        <div style={{ marginBottom: 8 }}>
+      <div className="user-registration-info">
+        <div className="registration-row">
           <Text strong>Пользователь:</Text>
-          <Text style={{ marginLeft: 8 }}>{user?.name || user?.login || '—'}</Text>
+          <Text>{user?.name || user?.login || '—'}</Text>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-          <CalendarOutlined style={{ marginRight: 8, color: '#1677ff' }} />
+        <div className="registration-row">
+          <CalendarOutlined className="registration-icon" />
           <Text strong>Дата регистрации:</Text>
-          <Text style={{ marginLeft: 8 }}>{formatDate(user?.created_at)}</Text>
+          <Text>{formatDate(user?.created_at)}</Text>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <ClockCircleOutlined style={{ marginRight: 8, color: '#1677ff' }} />
+        <div className="registration-row">
+          <ClockCircleOutlined className="registration-icon" />
           <Text strong>Время регистрации:</Text>
-          <Text style={{ marginLeft: 8 }}>{formatTime(user?.created_at)}</Text>
+          <Text>{formatTime(user?.created_at)}</Text>
         </div>
-        <Divider style={{ margin: '12px 0' }} />
-        <Text type="secondary" style={{ fontSize: 12 }}>
+        <Divider className="registration-divider" />
+        <Text type="secondary" className="registration-meta">
           ID: {user?.id} | Баланс: {user?.balance || 0} ₽
         </Text>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
           name="login"
           label="Логин"
@@ -139,12 +121,10 @@ function EditUserModal({ visible, user, onClose }) {
           <Input placeholder="+7 (999) 123-45-67" />
         </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+        <Form.Item className="modal-actions">
           <Space>
             <Button onClick={onClose}>Отмена</Button>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              Сохранить
-            </Button>
+            <Button type="primary" htmlType="submit" loading={loading}>Сохранить</Button>
           </Space>
         </Form.Item>
       </Form>

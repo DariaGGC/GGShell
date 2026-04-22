@@ -1,0 +1,25 @@
+.journal-page .journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.journal-page .journal-stats {
+  margin-bottom: 24px;
+}
+
+.sales-amount {
+  font-weight: bold;
+  color: #52c41a;
+}
+
+.replenishment-amount {
+  font-weight: bold;
+  color: #1677ff;
+}
+
+.session-cost {
+  font-weight: bold;
+  color: #52c41a;
+}
