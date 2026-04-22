@@ -13,11 +13,19 @@ function EditUserModal({ visible, user, onClose }) {
 
   useEffect(() => {
     if (user && visible) {
+      console.log('Editing user:', user); // Для отладки
+      
+      // Пробуем разные варианты полей (в базе может быть name или firstName/lastName)
+      const firstName = user.firstName || user.first_name || user.name?.split(' ')[1] || '';
+      const lastName = user.lastName || user.last_name || user.name?.split(' ')[0] || '';
+      const phone = user.phone || user.mobile || '';
+      const login = user.login || '';
+      
       form.setFieldsValue({
-        login: user.login,
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phone: user.phone || '',
+        login: login,
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
       });
     }
   }, [user, visible, form]);
@@ -38,6 +46,7 @@ function EditUserModal({ visible, user, onClose }) {
       onClose();
     } catch (error) {
       message.error('Ошибка при обновлении пользователя');
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -46,27 +55,42 @@ function EditUserModal({ visible, user, onClose }) {
   // Форматирование даты и времени
   const formatDate = (dateString) => {
     if (!dateString) return 'Не указано';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return 'Не указано';
+    }
   };
 
   const formatTime = (dateString) => {
     if (!dateString) return 'Не указано';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('ru-RU', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch {
+      return 'Не указано';
+    }
   };
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'Не указано';
-    return `${formatDate(dateString)} в ${formatTime(dateString)}`;
+  // Получаем имя для отображения
+  const getDisplayName = () => {
+    if (!user) return '—';
+    const firstName = user.firstName || user.first_name || '';
+    const lastName = user.lastName || user.last_name || '';
+    
+    if (firstName || lastName) {
+      return `${lastName} ${firstName}`.trim();
+    }
+    return user.name || '—';
   };
 
   return (
@@ -90,6 +114,10 @@ function EditUserModal({ visible, user, onClose }) {
         borderRadius: 8, 
         marginBottom: 20 
       }}>
+        <div style={{ marginBottom: 8 }}>
+          <Text strong>Пользователь:</Text>
+          <Text style={{ marginLeft: 8 }}>{getDisplayName()}</Text>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
           <CalendarOutlined style={{ marginRight: 8, color: '#1677ff' }} />
           <Text strong>Дата регистрации:</Text>
@@ -102,7 +130,7 @@ function EditUserModal({ visible, user, onClose }) {
         </div>
         <Divider style={{ margin: '12px 0' }} />
         <Text type="secondary" style={{ fontSize: 12 }}>
-          ID: {user?.id} | Баланс: {user?.balance} ₽
+          ID: {user?.id} | Баланс: {user?.balance || 0} ₽
         </Text>
       </div>
 
