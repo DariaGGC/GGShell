@@ -46,21 +46,31 @@ function DashboardPage() {
     return true;
   };
 
-  // сегодня
-  const today = dayjs().format('YYYY-MM-DD');
-  const todaySalesTotal = sales
-    .filter(s => s.date === today)
-    .reduce((sum, s) => sum + (s.total_price || 0), 0);
+// Выручка сегодня с разделением по способу оплаты
+const today = dayjs().format('YYYY-MM-DD');
 
-  const todayCash = replenishments
-    .filter(r => r.date === today && r.payment_methods?.name?.toLowerCase().includes('нал'))
-    .reduce((s, r) => s + (r.amount || 0), 0);
+// Продажи товаров
+const todaySalesCash = sales
+  .filter(s => s.date === today && s.payment_methods?.name?.toLowerCase().includes('нал'))
+  .reduce((sum, s) => sum + (s.total_price || 0), 0);
 
-  const todayCard = replenishments
-    .filter(r => r.date === today && r.payment_methods?.name?.toLowerCase().includes('карт'))
-    .reduce((s, r) => s + (r.amount || 0), 0);
+const todaySalesCard = sales
+  .filter(s => s.date === today && s.payment_methods?.name?.toLowerCase().includes('карт'))
+  .reduce((sum, s) => sum + (s.total_price || 0), 0);
 
-  const todayTotal = todaySalesTotal + todayCash + todayCard;
+// Пополнения баланса
+const todayReplenishmentCash = replenishments
+  .filter(r => r.date === today && r.payment_methods?.name?.toLowerCase().includes('нал'))
+  .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+const todayReplenishmentCard = replenishments
+  .filter(r => r.date === today && r.payment_methods?.name?.toLowerCase().includes('карт'))
+  .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+// Итоги
+const todayCash = todaySalesCash + todayReplenishmentCash;
+const todayCard = todaySalesCard + todayReplenishmentCard;
+const todayTotal = todayCash + todayCard;
 
   // пользователи
   const totalUsers = users.length;
@@ -151,17 +161,31 @@ const topDepositors = useMemo(() => {
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={8}>
             <Card>
-              <Statistic
-                title={<span><RiseOutlined /> Выручка сегодня</span>}
-                value={todayTotal}
-                suffix="₽"
-                valueStyle={{ color: '#389e0d', fontWeight: 700 }}
-              />
-              <div style={{ marginTop: 12, display: 'flex', gap: 24 }}>
-                <div><Text type="secondary">💵 Наличные</Text><br /><strong>{todayCash} ₽</strong></div>
-                <div><Text type="secondary">💳 Карта</Text><br /><strong>{todayCard} ₽</strong></div>
-              </div>
-            </Card>
+  <Statistic
+    title={<span><RiseOutlined /> Выручка сегодня</span>}
+    value={todayTotal}
+    suffix="₽"
+    valueStyle={{ color: '#389e0d', fontWeight: 700 }}
+  />
+  <div style={{ marginTop: 12, display: 'flex', gap: 24 }}>
+    <div>
+      <Text type="secondary">💵 Наличные</Text><br />
+      <strong>{todayCash} ₽</strong>
+      <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+        Продажи: {todaySalesCash} ₽<br />
+        Пополнения: {todayReplenishmentCash} ₽
+      </div>
+    </div>
+    <div>
+      <Text type="secondary">💳 Карта</Text><br />
+      <strong>{todayCard} ₽</strong>
+      <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+        Продажи: {todaySalesCard} ₽<br />
+        Пополнения: {todayReplenishmentCard} ₽
+      </div>
+    </div>
+  </div>
+</Card>
           </Col>
           <Col xs={24} sm={12} lg={8}>
             <Card>

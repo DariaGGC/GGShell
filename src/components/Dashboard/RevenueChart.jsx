@@ -24,33 +24,51 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
     return -1;
   };
 
-  const chartData = useMemo(() => {
-    const now = dayjs();
-    let labels = [];
-    if (period === 'today') labels = [now.format('DD.MM')];
-    else if (period === 'week') labels = Array.from({ length: 7 }, (_, i) => now.subtract(6 - i, 'day').format('DD.MM'));
-    else if (period === 'month') labels = Array.from({ length: 4 }, (_, i) => `Нед ${i + 1}`);
-    else labels = Array.from({ length: 12 }, (_, i) => now.subtract(11 - i, 'month').format('MMM'));
+const chartData = useMemo(() => {
+  const now = dayjs();
+  let labels = [];
+  
+  if (period === 'today') labels = [now.format('DD.MM')];
+  else if (period === 'week') labels = Array.from({ length: 7 }, (_, i) => now.subtract(6 - i, 'day').format('DD.MM'));
+  else if (period === 'month') labels = Array.from({ length: 4 }, (_, i) => `Нед ${i + 1}`);
+  else labels = Array.from({ length: 12 }, (_, i) => now.subtract(11 - i, 'month').format('MMM'));
 
-    const data = labels.map(name => ({ name, salesCash: 0, salesCard: 0, refillCash: 0, refillCard: 0 }));
+  const data = labels.map(name => ({ 
+    name, 
+    salesCash: 0, 
+    salesCard: 0, 
+    refillCash: 0, 
+    refillCard: 0 
+  }));
 
-    sales.forEach(s => {
-      const idx = getIndex(s.date, period);
-      if (idx === -1) return;
-      if (s.payment_method?.includes('нал')) data[idx].salesCash += s.total_price || 0;
-      else data[idx].salesCard += s.total_price || 0;
-    });
+  // Продажи
+  sales.forEach(s => {
+    const idx = getIndex(s.date, period);
+    if (idx === -1) return;
+    
+    const method = s.payment_methods?.name?.toLowerCase() || '';
+    if (method.includes('нал')) {
+      data[idx].salesCash += s.total_price || 0;
+    } else if (method.includes('карт')) {
+      data[idx].salesCard += s.total_price || 0;
+    }
+  });
 
-    replenishments.forEach(r => {
-      const idx = getIndex(r.date, period);
-      if (idx === -1) return;
-      const method = r.payment_methods?.name?.toLowerCase() || '';
-      if (method.includes('нал')) data[idx].refillCash += r.amount || 0;
-      else if (method.includes('карт')) data[idx].refillCard += r.amount || 0;
-    });
+  // Пополнения
+  replenishments.forEach(r => {
+    const idx = getIndex(r.date, period);
+    if (idx === -1) return;
+    
+    const method = r.payment_methods?.name?.toLowerCase() || '';
+    if (method.includes('нал')) {
+      data[idx].refillCash += r.amount || 0;
+    } else if (method.includes('карт')) {
+      data[idx].refillCard += r.amount || 0;
+    }
+  });
 
-    return data;
-  }, [sales, replenishments, period]);
+  return data;
+}, [sales, replenishments, period]);
 
   const total = chartData.reduce((s, d) => s + d.salesCash + d.salesCard + d.refillCash + d.refillCard, 0);
 

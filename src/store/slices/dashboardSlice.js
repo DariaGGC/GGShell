@@ -6,11 +6,11 @@ export const fetchDashboardStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const [salesRes, sessionsRes, computersRes, usersRes, replenishmentsRes] = await Promise.all([
-        apiClient.get('/sales_journals?select=*,products(*)'),  // ← добавили products(*)
+        apiClient.get('/sales_journals?select=*,products(*),payment_methods(*)'),  // ← добавили payment_methods
         apiClient.get('/sessions?select=*'),
         apiClient.get('/computers?select=*,zones(*)'),
         apiClient.get('/users?select=*'),
-        apiClient.get('/replenishment_logs?select=*,payment_methods(*),users(*)')  // ← добавили users(*)
+        apiClient.get('/replenishment_logs?select=*,payment_methods(*),users(*)')
       ]);
 
       return {

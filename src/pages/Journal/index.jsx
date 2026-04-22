@@ -329,7 +329,7 @@ const totalRevenue = totalSales + totalReplenishments;
     <div>
       {/* Заголовок */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>📋 Логи и история</Title>
+        <Title level={2} style={{ margin: 0 }}>📋 Журнал</Title>
         <Space>
           <RangePicker
             locale={locale}

@@ -36,26 +36,22 @@ export const createSale = createAsyncThunk(
       const date = now.toISOString().split('T')[0];
       const time = now.toTimeString().split(' ')[0];
 
-      // Создаём записи в журнале продаж и обновляем количество товаров
       for (const item of items) {
-        // Создаём запись о продаже
         await apiClient.post('/sales_journals', {
           product_id: item.id,
           quantity: item.cartQuantity,
           total_price: item.cartQuantity * item.price,
           date: date,
           time: time,
+          payment_method_id: paymentMethodId  // ← ДОБАВИТЬ
         });
 
-        // Обновляем количество товара на складе
         await apiClient.patch(`/products?id=eq.${item.id}`, {
           quantity: item.quantity - item.cartQuantity,
         });
       }
 
-      // Обновляем список товаров
       dispatch(fetchProducts());
-
       return { success: true };
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Ошибка оформления продажи');
