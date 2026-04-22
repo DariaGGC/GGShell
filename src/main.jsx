@@ -7,6 +7,9 @@ import ruRU from 'antd/locale/ru_RU';
 import App from './App';
 import { store } from './store/store';
 import 'antd/dist/reset.css';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
+dayjs.locale('ru');
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

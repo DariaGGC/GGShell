@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Card,
@@ -25,13 +25,23 @@ import {
   fetchReplenishments,
   fetchSessionsHistory,
   setActiveTab,
-  setDateRange,
 } from '../../store/slices/logsSlice';
 import dayjs from 'dayjs';
-import { formatMoscowDate, formatMoscowTime, formatMoscowDateTime, MOSCOW_TZ } from '../../utils/dateUtils';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import locale from 'antd/es/date-picker/locale/ru_RU';
+import { formatMoscowDateTime } from '../../utils/dateUtils';
+
+// Подключаем плагины
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+dayjs.locale('ru');
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
+
+// Настройка локали для dayjs
+dayjs.locale('ru');
 
 function LogsPage() {
   const dispatch = useDispatch();
@@ -41,9 +51,14 @@ function LogsPage() {
     sessionsHistory,
     isLoading,
     activeTab,
-    dateRange,
     error,
   } = useSelector(state => state.logs);
+
+  // По умолчанию — сегодня и завтра (с 00:00 сегодня до 23:59 завтра)
+  const [dateRange, setDateRange] = useState([
+    dayjs().startOf('day'),
+    dayjs().add(1, 'day').endOf('day')
+  ]);
 
   useEffect(() => {
     loadAllData();
@@ -55,16 +70,31 @@ function LogsPage() {
     dispatch(fetchSessionsHistory());
   };
 
-  // Фильтрация по датам с учётом московского времени
+  // Обработчик изменения диапазона дат
+  const handleRangeChange = (dates) => {
+    if (!dates) {
+      setDateRange([
+        dayjs().startOf('day'),
+        dayjs().add(1, 'day').endOf('day')
+      ]);
+      return;
+    }
+    setDateRange([
+      dates[0].startOf('day'),
+      dates[1].endOf('day')
+    ]);
+  };
+
+  // Фильтрация по датам (включая границы)
   const filterByDateRange = (data, dateField = 'date') => {
     if (!dateRange || !dateRange[0] || !dateRange[1]) return data;
     
-    const startDate = dayjs(dateRange[0]).startOf('day');
-    const endDate = dayjs(dateRange[1]).endOf('day');
+    const startDate = dateRange[0];
+    const endDate = dateRange[1];
     
     return data.filter(item => {
       const itemDate = dayjs(item[dateField]);
-      return itemDate.isAfter(startDate) && itemDate.isBefore(endDate);
+      return (itemDate.isSameOrAfter(startDate) && itemDate.isSameOrBefore(endDate));
     });
   };
 
@@ -79,14 +109,13 @@ function LogsPage() {
       dataIndex: 'date',
       key: 'date',
       width: 120,
-      render: (date) => formatMoscowDate(date),
+      render: (date) => dayjs(date).format('DD.MM.YYYY'),
     },
     {
       title: 'Время',
       dataIndex: 'time',
       key: 'time',
       width: 100,
-      render: (time) => time,
     },
     {
       title: 'Товар',
@@ -119,14 +148,13 @@ function LogsPage() {
       dataIndex: 'date',
       key: 'date',
       width: 120,
-      render: (date) => formatMoscowDate(date),
+      render: (date) => dayjs(date).format('DD.MM.YYYY'),
     },
     {
       title: 'Время',
       dataIndex: 'time',
       key: 'time',
       width: 100,
-      render: (time) => time,
     },
     {
       title: 'Клиент',
@@ -226,7 +254,11 @@ function LogsPage() {
           columns={salesColumns}
           dataSource={filteredSales}
           rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          pagination={{ 
+            pageSize: 10, 
+            showSizeChanger: true,
+            showTotal: (total) => `Всего ${total} записей`
+          }}
           scroll={{ x: 600 }}
         />
       ),
@@ -244,7 +276,11 @@ function LogsPage() {
           columns={replenishmentColumns}
           dataSource={filteredReplenishments}
           rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          pagination={{ 
+            pageSize: 10, 
+            showSizeChanger: true,
+            showTotal: (total) => `Всего ${total} записей`
+          }}
           scroll={{ x: 600 }}
         />
       ),
@@ -262,7 +298,11 @@ function LogsPage() {
           columns={sessionsColumns}
           dataSource={filteredSessions}
           rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          pagination={{ 
+            pageSize: 10, 
+            showSizeChanger: true,
+            showTotal: (total) => `Всего ${total} записей`
+          }}
           scroll={{ x: 800 }}
         />
       ),
@@ -292,11 +332,12 @@ function LogsPage() {
         <Title level={2} style={{ margin: 0 }}>📋 Логи и история</Title>
         <Space>
           <RangePicker
+            locale={locale}
             value={dateRange}
-            onChange={(dates) => dispatch(setDateRange(dates))}
+            onChange={handleRangeChange}
             format="DD.MM.YYYY"
             placeholder={['Начало', 'Конец']}
-            allowClear
+            allowClear={false}
           />
           <Button
             icon={<ReloadOutlined />}
@@ -309,40 +350,40 @@ function LogsPage() {
       </div>
 
       {/* Статистика */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Выручка от продаж"
-              value={totalSales}
-              suffix="₽"
-              prefix={<ShoppingCartOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Пополнения баланса"
-              value={totalReplenishments}
-              suffix="₽"
-              prefix={<WalletOutlined />}
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card>
-            <Statistic
-              title="Выручка от сессий"
-              value={totalSessionsRevenue}
-              suffix="₽"
-              prefix={<HistoryOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-      </Row>
+<Row gutter={16} style={{ marginBottom: 24 }}>
+  <Col span={8}>
+    <Card>
+      <Statistic
+        title="Выручка от продаж"
+        value={totalSales}
+        suffix="₽"
+        prefix={<ShoppingCartOutlined />}
+      />
+    </Card>
+  </Col>
+  <Col span={8}>
+    <Card>
+      <Statistic
+        title="Пополнения баланса"
+        value={totalReplenishments}
+        suffix="₽"
+        prefix={<WalletOutlined />}
+        styles={{ content: { color: '#1677ff' } }}
+      />
+    </Card>
+  </Col>
+  <Col span={8}>
+    <Card>
+      <Statistic
+        title="Выручка от сессий"
+        value={totalSessionsRevenue}
+        suffix="₽"
+        prefix={<HistoryOutlined />}
+        styles={{ content: { color: '#52c41a' } }}
+      />
+    </Card>
+  </Col>
+</Row>
 
       {/* Табы с логами */}
       <Card>
