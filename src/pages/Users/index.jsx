@@ -20,6 +20,7 @@ import {
   SearchOutlined,
   PlusOutlined,
   WalletOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import {
   fetchUsers,
@@ -29,6 +30,8 @@ import {
   setFilterStatus,
 } from '../../store/slices/usersSlice';
 import TopUpModal from '../../components/Users/TopUpModal';
+import EditUserModal from '../../components/Users/EditUserModal';
+import AddUserModal from '../../components/Users/AddUserModal';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -46,6 +49,9 @@ function UsersPage() {
 
   const [topUpModalVisible, setTopUpModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+  const [addModalVisible, setAddModalVisible] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUsers());
@@ -56,7 +62,6 @@ function UsersPage() {
   const filteredUsers = useMemo(() => {
     let filtered = users;
 
-    // Поиск по тексту
     if (searchText) {
       const search = searchText.toLowerCase();
       filtered = filtered.filter(user =>
@@ -68,7 +73,6 @@ function UsersPage() {
       );
     }
 
-    // Фильтр по статусу авторизации
     if (filterStatus === 'authorized') {
       filtered = filtered.filter(user => user.activeSession !== null);
     } else if (filterStatus === 'unauthorized') {
@@ -96,6 +100,12 @@ function UsersPage() {
 
   const handleTopUpSubmit = async (data) => {
     await dispatch(topUpBalance(data)).unwrap();
+  };
+
+  const handleEditUser = (user) => {
+    console.log('Edit user clicked:', user); // Для отладки
+    setSelectedUserForEdit(user);
+    setEditModalVisible(true);
   };
 
   // Колонки таблицы
@@ -165,17 +175,24 @@ function UsersPage() {
     {
       title: 'Действия',
       key: 'actions',
-      width: 120,
+      width: 150,
       fixed: 'right',
       render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<WalletOutlined />}
-          onClick={() => handleTopUp(record)}
-        >
-          Пополнить
-        </Button>
+        <Space>
+          <Button
+            type="primary"
+            size="small"
+            icon={<WalletOutlined />}
+            onClick={() => handleTopUp(record)}
+          >
+            Пополнить
+          </Button>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEditUser(record)}
+          />
+        </Space>
       ),
     },
   ];
@@ -209,7 +226,11 @@ function UsersPage() {
           >
             Обновить
           </Button>
-          <Button type="primary" icon={<PlusOutlined />}>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={() => setAddModalVisible(true)}
+          >
             Добавить
           </Button>
         </Space>
@@ -276,7 +297,7 @@ function UsersPage() {
         </Spin>
       </Card>
 
-      {/* Модальное окно пополнения */}
+      {/* Модальные окна */}
       <TopUpModal
         visible={topUpModalVisible}
         user={selectedUser}
@@ -286,6 +307,20 @@ function UsersPage() {
           setSelectedUser(null);
         }}
         onSubmit={handleTopUpSubmit}
+      />
+
+      <EditUserModal
+        visible={editModalVisible}
+        user={selectedUserForEdit}
+        onClose={() => {
+          setEditModalVisible(false);
+          setSelectedUserForEdit(null);
+        }}
+      />
+
+      <AddUserModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
       />
     </div>
   );

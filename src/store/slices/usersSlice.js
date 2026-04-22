@@ -31,6 +31,27 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
+export const updateUser = createAsyncThunk(
+  'users/updateUser',
+  async ({ userId, login, firstName, lastName, phone }, { rejectWithValue, dispatch }) => {
+    try {
+      await apiClient.patch(`/users?id=eq.${userId}`, {
+        login,
+        firstName,
+        lastName,
+        phone
+      });
+      
+      // Обновляем список пользователей
+      dispatch(fetchUsers());
+      
+      return { success: true };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Ошибка обновления пользователя');
+    }
+  }
+);
+
 // Пополнить баланс
 export const topUpBalance = createAsyncThunk(
   'users/topUpBalance',
@@ -98,6 +119,17 @@ const usersSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+        .addCase(updateUser.pending, (state) => {
+    state.isLoading = true;
+    state.error = null;
+    })
+    .addCase(updateUser.fulfilled, (state) => {
+    state.isLoading = false;
+    })
+    .addCase(updateUser.rejected, (state, action) => {
+    state.isLoading = false;
+    state.error = action.payload;
+    })
       .addCase(fetchUsers.pending, (state) => {
         state.isLoading = true;
         state.error = null;
