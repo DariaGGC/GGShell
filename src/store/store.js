@@ -3,6 +3,7 @@ import computersReducer from './slices/computersSlice';
 import usersReducer from './slices/usersSlice';
 import salesReducer from './slices/salesSlice';
 import logsReducer from './slices/logsSlice';
+import dashboardReducer from './slices/dashboardSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export const store = configureStore({
     users: usersReducer,
     sales: salesReducer,
     logs: logsReducer,
+    dashboard: dashboardReducer,
   },
 });
