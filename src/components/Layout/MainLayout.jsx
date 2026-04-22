@@ -21,7 +21,6 @@ const menuItems = [
 ];
 
 function MainLayout({ children }) {
-  const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { token: { colorBgContainer, borderRadiusLG } } = theme.useToken();
@@ -29,29 +28,22 @@ function MainLayout({ children }) {
   return (
     <div className="layout-wrapper">
       <Layout className="layout-main">
-        <Sider 
-          collapsible 
-          collapsed={collapsed} 
-          onCollapse={setCollapsed}
-          theme="dark"
-        >
-          <div className={`logo ${collapsed ? 'logo-collapsed' : ''}`}>
-            {collapsed ? 'GG' : 'GG.Shell'}
-          </div>
+        <Sider width={260} style={{ background: '#ffffff', borderRadius: '8px', margin: '0 0 24px 24px'}}>
+          <div className="logo">GG.Shell</div>
           <Menu
-            theme="dark"
             mode="inline"
             selectedKeys={[location.pathname]}
             items={menuItems}
             onClick={({ key }) => navigate(key)}
+            style={{ fontSize: '16px'}}
           />
         </Sider>
         
         <Layout className="layout-content-wrapper">
           <Header className="layout-header" style={{ background: colorBgContainer }}>
-            <h1 className="header-title">GG.Shell — Управление компьютерным клубом</h1>
+            <h1 className="header-title">Управление компьютерным клубом</h1>
             <div className="header-info">
-              <span>👤 Администратор</span>
+              <span>👤 Дарья Т.</span>
               <span>{new Date().toLocaleDateString('ru-RU')}</span>
             </div>
           </Header>
