@@ -1,16 +1,171 @@
-# React + Vite
+# 🎮 GG.Shell — CRM для компьютерного клуба
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Система управления компьютерным клубом с дашбордом, учётом клиентов, продажами товаров и историей операций.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Быстрый старт
 
-## React Compiler
+### 1. Клонировать репозиторий
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+git clone https://github.com/your-username/ggshell.git
+cd ggshell
+```
 
-## Expanding the ESLint configuration
+### 2. Установить зависимости
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+```
+
+### 3. Настроить переменные окружения
+
+Создать файл `.env` в корне проекта:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### 4. Запустить проект
+
+```bash
+npm run dev
+```
+
+Приложение будет доступно по адресу: [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🛠 Стек технологий
+
+| Технология    | Назначение                |
+| ------------- | ------------------------- |
+| React 18      | UI-библиотека             |
+| Vite          | Сборщик                   |
+| Redux Toolkit | Управление состоянием     |
+| Ant Design    | Компоненты интерфейса     |
+| Supabase      | Бэкенд (PostgreSQL + API) |
+| Axios         | HTTP-клиент               |
+| Recharts      | Графики                   |
+| dayjs         | Работа с датами           |
+
+---
+
+## 📁 Структура проекта
+
+```text
+src/
+├── api/
+│   └── client.js           # Конфигурация Axios + Supabase
+├── components/             # Переиспользуемые компоненты
+│   ├── Computers/
+│   ├── Dashboard/
+│   ├── Layout/
+│   ├── Sales/
+│   └── Users/
+├── pages/                  # Страницы приложения
+│   ├── Computers/
+│   ├── Dashboard/
+│   ├── Journal/
+│   ├── Sales/
+│   └── Users/
+├── store/                  # Redux
+│   ├── slices/             # Слайсы состояния
+│   └── store.js
+├── utils/
+│   └── dateUtils.js        # Утилиты для работы с датами
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+## 📊 Функциональность
+
+### 📌 Дашборд
+
+* Выручка сегодня с разбивкой наличные/карта
+* Сравнение со вчерашним днём
+* Пользователи: всего, новых по периодам, активные/неактивные
+* График доходов (неделя/месяц/год + произвольный диапазон)
+* Загрузка по зонам (Стандарт / VIP / Буткемп)
+* Популярность зон за сегодня
+* Топ товаров и топ по депозитам
+
+### 💻 Компьютеры
+
+* Таблица всех ПК с фильтрацией по зоне и статусу
+* Посадка клиента за компьютер
+* Динамическое списание баланса
+* Принудительное завершение сессии
+* Отправка на обслуживание
+
+### 👥 Пользователи
+
+* Список клиентов с поиском
+* Фильтр по статусу авторизации
+* Добавление и редактирование пользователей
+* Пополнение баланса
+
+### 🛒 Продажи
+
+* Корзина товаров
+* Каталог товаров с поиском
+* Приход товара (пополнение склада)
+* Создание и редактирование товаров
+* Оформление продажи с выбором способа оплаты
+
+### 📋 Журнал
+
+* История продаж товаров
+* История пополнений баланса
+* История игровых сессий
+* Фильтрация по диапазону дат
+* Статистика по выручке
+
+---
+
+## 🔧 Скрипты
+
+| Команда         | Описание                        |
+| --------------- | ------------------------------- |
+| npm run dev     | Запуск в режиме разработки      |
+| npm run build   | Сборка для продакшена           |
+| npm run preview | Предпросмотр собранного проекта |
+
+---
+
+## 📦 Сборка для продакшена
+
+```bash
+npm run build
+```
+
+Собранные файлы будут в папке `dist/`.
+
+---
+
+## 🔑 Переменные окружения
+
+| Переменная             | Описание                |
+| ---------------------- | ----------------------- |
+| VITE_SUPABASE_URL      | URL проекта Supabase    |
+| VITE_SUPABASE_ANON_KEY | Анонимный ключ Supabase |
+
+---
+
+## 📄 Лицензия
+
+MIT
+
+---
+
+## 🔵 Коммит
+
+```bash
+git add README.md
+git commit -m "docs: add project README"
+git push
+```
