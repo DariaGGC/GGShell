@@ -4,7 +4,7 @@ import DashboardPage from './pages/Dashboard';
 import ComputersPage from './pages/Computers';
 import UsersPage from './pages/Users';
 import SalesPage from './pages/Sales';
-import LogsPage from './pages/Logs';
+import JournalPage from './pages/Journal';
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
         <Route path="/computers" element={<ComputersPage />} />
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/users" element={<UsersPage />} />
-        <Route path="/logs" element={<LogsPage />} />
+        <Route path="/logs" element={<JournalPage />} />
       </Routes>
     </MainLayout>
   );

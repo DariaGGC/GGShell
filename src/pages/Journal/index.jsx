@@ -25,7 +25,7 @@ import {
   fetchReplenishments,
   fetchSessionsHistory,
   setActiveTab,
-} from '../../store/slices/logsSlice';
+} from '../../store/slices/journalSlice';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -43,7 +43,7 @@ const { RangePicker } = DatePicker;
 // Настройка локали для dayjs
 dayjs.locale('ru');
 
-function LogsPage() {
+function JournalPage() {
   const dispatch = useDispatch();
   const {
     sales,
@@ -52,7 +52,7 @@ function LogsPage() {
     isLoading,
     activeTab,
     error,
-  } = useSelector(state => state.logs);
+  } = useSelector(state => state.journal);
 
   // По умолчанию — сегодня и завтра (с 00:00 сегодня до 23:59 завтра)
   const [dateRange, setDateRange] = useState([
@@ -399,4 +399,4 @@ const totalRevenue = totalSales + totalReplenishments;
   );
 }
 
-export default LogsPage;
+export default JournalPage;

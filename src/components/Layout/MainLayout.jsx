@@ -16,7 +16,7 @@ const menuItems = [
   { key: '/computers', icon: <DesktopOutlined />, label: 'Компьютеры' },
   { key: '/sales', icon: <ShoppingCartOutlined />, label: 'Продажи' },
   { key: '/users', icon: <UserOutlined />, label: 'Пользователи' },
-  { key: '/logs', icon: <HistoryOutlined />, label: 'Логи' },
+  { key: '/logs', icon: <HistoryOutlined />, label: 'Журнал' },
 ];
 
 function MainLayout({ children }) {

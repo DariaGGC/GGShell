@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import computersReducer from './slices/computersSlice';
 import usersReducer from './slices/usersSlice';
 import salesReducer from './slices/salesSlice';
-import logsReducer from './slices/logsSlice';
+import journalReducer from './slices/journalSlice';
 import dashboardReducer from './slices/dashboardSlice';
 
 export const store = configureStore({
@@ -10,7 +10,7 @@ export const store = configureStore({
     computers: computersReducer,
     users: usersReducer,
     sales: salesReducer,
-    logs: logsReducer,
+    journal: journalReducer,
     dashboard: dashboardReducer,
   },
 });
