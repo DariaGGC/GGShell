@@ -13,13 +13,12 @@ import {
   Col,
   Spin,
   Alert,
-  Tooltip,
+  Typography,
 } from 'antd';
 import {
   ReloadOutlined,
   SearchOutlined,
   PlusOutlined,
-  UserOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 import {
@@ -27,10 +26,11 @@ import {
   fetchPaymentMethods,
   topUpBalance,
   setSearchText,
-  setFilterBalance,
+  setFilterStatus,
 } from '../../store/slices/usersSlice';
 import TopUpModal from '../../components/Users/TopUpModal';
 
+const { Title } = Typography;
 const { Option } = Select;
 
 function UsersPage() {
@@ -41,7 +41,7 @@ function UsersPage() {
     isLoading,
     error,
     searchText,
-    filterBalance,
+    filterStatus,
   } = useSelector(state => state.users);
 
   const [topUpModalVisible, setTopUpModalVisible] = useState(false);
@@ -62,29 +62,31 @@ function UsersPage() {
       filtered = filtered.filter(user =>
         user.login?.toLowerCase().includes(search) ||
         user.name?.toLowerCase().includes(search) ||
-        user.phone?.includes(search)
+        user.phone?.includes(search) ||
+        user.lastName?.toLowerCase().includes(search) ||
+        user.firstName?.toLowerCase().includes(search)
       );
     }
 
-    // Фильтр по балансу
-    if (filterBalance === 'positive') {
-      filtered = filtered.filter(user => user.balance > 0);
-    } else if (filterBalance === 'zero') {
-      filtered = filtered.filter(user => user.balance === 0);
-    } else if (filterBalance === 'negative') {
-      filtered = filtered.filter(user => user.balance < 0);
+    // Фильтр по статусу авторизации
+    if (filterStatus === 'authorized') {
+      filtered = filtered.filter(user => user.activeSession !== null);
+    } else if (filterStatus === 'unauthorized') {
+      filtered = filtered.filter(user => user.activeSession === null);
     }
 
     return filtered;
-  }, [users, searchText, filterBalance]);
+  }, [users, searchText, filterStatus]);
 
   // Статистика
   const stats = useMemo(() => {
     const total = users.length;
-    const active = users.filter(u => u.activeSession).length;
-    const totalBalance = users.reduce((sum, u) => sum + (u.balance || 0), 0);
-    const avgBalance = total > 0 ? Math.round(totalBalance / total) : 0;
-    return { total, active, totalBalance, avgBalance };
+    const today = new Date().toISOString().split('T')[0];
+    const todayRegistrations = users.filter(u => 
+      u.created_at?.startsWith(today)
+    ).length;
+
+    return { total, todayRegistrations };
   }, [users]);
 
   const handleTopUp = (user) => {
@@ -102,35 +104,30 @@ function UsersPage() {
       title: 'Логин',
       dataIndex: 'login',
       key: 'login',
-      width: 150,
+      width: 130,
       sorter: (a, b) => a.login.localeCompare(b.login),
-      render: (login) => (
-        <Space>
-          <UserOutlined />
-          <span style={{ fontWeight: 500 }}>{login}</span>
-        </Space>
-      ),
     },
     {
       title: 'ФИО',
-      dataIndex: 'name',
-      key: 'name',
-      width: 200,
-      sorter: (a, b) => (a.name || '').localeCompare(b.name || ''),
-      render: (name) => name || '—',
+      key: 'fullName',
+      width: 180,
+      render: (_, record) => {
+        const name = [record.lastName, record.firstName].filter(Boolean).join(' ');
+        return name || record.name || '—';
+      },
     },
     {
       title: 'Телефон',
       dataIndex: 'phone',
       key: 'phone',
-      width: 160,
+      width: 150,
       render: (phone) => phone || '—',
     },
     {
       title: 'Баланс',
       dataIndex: 'balance',
       key: 'balance',
-      width: 130,
+      width: 110,
       sorter: (a, b) => a.balance - b.balance,
       render: (balance) => {
         let color = '#52c41a';
@@ -138,7 +135,7 @@ function UsersPage() {
         else if (balance === 0) color = '#faad14';
         return (
           <span style={{ color, fontWeight: 'bold' }}>
-            {balance} ₽
+            {balance || 0} ₽
           </span>
         );
       },
@@ -146,38 +143,23 @@ function UsersPage() {
     {
       title: 'Статус',
       key: 'status',
-      width: 120,
+      width: 130,
       render: (_, record) => {
         if (record.activeSession) {
-          return (
-            <Tooltip title={`ПК #${record.activeSession.computers?.number}`}>
-              <Tag color="processing">В игре</Tag>
-            </Tooltip>
-          );
+          return <Tag color="processing">Авторизован</Tag>;
         }
-        return <Tag color="default">Не в игре</Tag>;
+        return <Tag color="default">Не авторизован</Tag>;
       },
     },
     {
-      title: 'Компьютер',
+      title: '№ ПК',
       key: 'computer',
-      width: 120,
+      width: 80,
       render: (_, record) => {
         if (record.activeSession) {
-          return `ПК #${record.activeSession.computers?.number}`;
+          return <Tag color="blue">{record.activeSession.computers?.number}</Tag>;
         }
         return '—';
-      },
-    },
-    {
-      title: 'Дата регистрации',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      width: 150,
-      sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
-      render: (date) => {
-        if (!date) return '—';
-        return new Date(date).toLocaleDateString('ru-RU');
       },
     },
     {
@@ -218,7 +200,7 @@ function UsersPage() {
     <div>
       {/* Заголовок */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h2 style={{ margin: 0 }}>👥 Управление пользователями</h2>
+        <Title level={2} style={{ margin: 0 }}>👥 Пользователи</Title>
         <Space>
           <Button
             icon={<ReloadOutlined />}
@@ -228,43 +210,24 @@ function UsersPage() {
             Обновить
           </Button>
           <Button type="primary" icon={<PlusOutlined />}>
-            Добавить пользователя
+            Добавить
           </Button>
         </Space>
       </div>
 
       {/* Статистика */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+        <Col span={12}>
           <Card>
-            <Statistic title="Всего пользователей" value={stats.total} prefix={<UserOutlined />} />
+            <Statistic title="Всего пользователей" value={stats.total} />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={12}>
           <Card>
-            <Statistic
-              title="В игре"
-              value={stats.active}
-              valueStyle={{ color: '#1677ff' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Общий баланс"
-              value={stats.totalBalance}
-              suffix="₽"
+            <Statistic 
+              title="Регистраций за сегодня" 
+              value={stats.todayRegistrations}
               valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Средний баланс"
-              value={stats.avgBalance}
-              suffix="₽"
             />
           </Card>
         </Col>
@@ -282,15 +245,15 @@ function UsersPage() {
             allowClear
           />
           <Select
-            style={{ width: 180 }}
-            placeholder="Фильтр по балансу"
+            style={{ width: 200 }}
+            placeholder="Фильтр по статусу"
             allowClear
-            value={filterBalance}
-            onChange={(value) => dispatch(setFilterBalance(value))}
+            value={filterStatus === 'all' ? undefined : filterStatus}
+            onChange={(value) => dispatch(setFilterStatus(value || 'all'))}
           >
-            <Option value="positive">Положительный</Option>
-            <Option value="zero">Нулевой</Option>
-            <Option value="negative">Отрицательный</Option>
+            <Option value="all">Все</Option>
+            <Option value="authorized">Авторизован</Option>
+            <Option value="unauthorized">Не авторизован</Option>
           </Select>
         </Space>
       </Card>
@@ -307,7 +270,7 @@ function UsersPage() {
               showSizeChanger: true,
               showTotal: (total) => `Всего ${total} пользователей`,
             }}
-            scroll={{ x: 1200 }}
+            scroll={{ x: 1000 }}
             size="middle"
           />
         </Spin>

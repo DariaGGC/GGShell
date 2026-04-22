@@ -6,17 +6,14 @@ export const fetchUsers = createAsyncThunk(
   'users/fetchUsers',
   async (_, { rejectWithValue }) => {
     try {
-      // Получаем пользователей
       const usersResponse = await apiClient.get('/users?order=login.asc');
       const users = usersResponse.data;
 
-      // Получаем активные сессии с компьютерами
       const sessionsResponse = await apiClient.get(
-        '/sessions?select=*,computers(*)&status=eq.active'
+        '/sessions?select=*,computers(*),tariffs(*)&status=eq.active'
       );
       const activeSessions = sessionsResponse.data;
 
-      // Объединяем данные
       const usersWithSessions = users.map(user => {
         const activeSession = activeSessions.find(
           session => session.user_id === user.id
@@ -39,17 +36,14 @@ export const topUpBalance = createAsyncThunk(
   'users/topUpBalance',
   async ({ userId, amount, paymentMethodId }, { rejectWithValue, dispatch }) => {
     try {
-      // Получаем текущий баланс
       const userResponse = await apiClient.get(`/users?id=eq.${userId}`);
       const user = userResponse.data[0];
       const newBalance = user.balance + amount;
 
-      // Обновляем баланс пользователя
       await apiClient.patch(`/users?id=eq.${userId}`, {
         balance: newBalance
       });
 
-      // Создаём запись о пополнении
       const now = new Date();
       await apiClient.post('/replenishment_logs', {
         user_id: userId,
@@ -59,7 +53,6 @@ export const topUpBalance = createAsyncThunk(
         time: now.toTimeString().split(' ')[0]
       });
 
-      // Обновляем список пользователей
       dispatch(fetchUsers());
 
       return { success: true, newBalance };
@@ -90,14 +83,14 @@ const usersSlice = createSlice({
     isLoading: false,
     error: null,
     searchText: '',
-    filterBalance: null, // 'positive', 'zero', 'negative', null
+    filterStatus: 'all', // 'all', 'authorized', 'unauthorized'
   },
   reducers: {
     setSearchText: (state, action) => {
       state.searchText = action.payload;
     },
-    setFilterBalance: (state, action) => {
-      state.filterBalance = action.payload;
+    setFilterStatus: (state, action) => {
+      state.filterStatus = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -105,7 +98,6 @@ const usersSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetchUsers
       .addCase(fetchUsers.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -118,16 +110,14 @@ const usersSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      // fetchPaymentMethods
       .addCase(fetchPaymentMethods.fulfilled, (state, action) => {
         state.paymentMethods = action.payload;
       })
-      // topUpBalance
       .addCase(topUpBalance.rejected, (state, action) => {
         state.error = action.payload;
       });
   },
 });
 
-export const { setSearchText, setFilterBalance, clearError } = usersSlice.actions;
+export const { setSearchText, setFilterStatus, clearError } = usersSlice.actions;
 export default usersSlice.reducer;
