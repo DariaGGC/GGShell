@@ -6,9 +6,9 @@ export const fetchSales = createAsyncThunk(
   'logs/fetchSales',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get(
-        '/sales_journals?select=*,products(*)&order=date.desc,time.desc'
-      );
+const response = await apiClient.get(
+  '/sales_journals?select=*,products(*),payment_methods(*)&order=date.desc,time.desc'
+);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || 'Ошибка загрузки продаж');

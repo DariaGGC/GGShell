@@ -43,7 +43,7 @@ export const createSale = createAsyncThunk(
           total_price: item.cartQuantity * item.price,
           date: date,
           time: time,
-          payment_method_id: paymentMethodId  // ← ДОБАВИТЬ
+          payment_method_id: paymentMethodId
         });
 
         await apiClient.patch(`/products?id=eq.${item.id}`, {

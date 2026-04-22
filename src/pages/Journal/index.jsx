@@ -13,6 +13,7 @@ import {
   Col,
   Typography,
   DatePicker,
+  Tag,  // ← ДОБАВИТЬ
 } from 'antd';
 import {
   ReloadOutlined,
@@ -104,42 +105,53 @@ function JournalPage() {
 
   // Колонки для таблицы продаж
   const salesColumns = [
-    {
-      title: 'Дата',
-      dataIndex: 'date',
-      key: 'date',
-      width: 120,
-      render: (date) => dayjs(date).format('DD.MM.YYYY'),
+  {
+    title: 'Дата',
+    dataIndex: 'date',
+    key: 'date',
+    width: 120,
+    render: (date) => dayjs(date).format('DD.MM.YYYY'),
+  },
+  {
+    title: 'Время',
+    dataIndex: 'time',
+    key: 'time',
+    width: 100,
+  },
+  {
+    title: 'Товар',
+    dataIndex: ['products', 'name'],
+    key: 'product',
+  },
+  {
+    title: 'Кол-во',
+    dataIndex: 'quantity',
+    key: 'quantity',
+    width: 80,
+  },
+  {
+    title: 'Сумма',
+    dataIndex: 'total_price',
+    key: 'total_price',
+    width: 110,
+    render: (value) => (
+      <span style={{ fontWeight: 'bold', color: '#52c41a' }}>
+        {value} ₽
+      </span>
+    ),
+  },
+  {
+    title: 'Оплата',
+    dataIndex: ['payment_methods', 'name'],
+    key: 'payment_method',
+    width: 120,
+    render: (name) => {
+      if (!name) return <Tag>—</Tag>;
+      const color = name.toLowerCase().includes('нал') ? 'green' : 'blue';
+      return <Tag color={color}>{name}</Tag>;
     },
-    {
-      title: 'Время',
-      dataIndex: 'time',
-      key: 'time',
-      width: 100,
-    },
-    {
-      title: 'Товар',
-      dataIndex: ['products', 'name'],
-      key: 'product',
-    },
-    {
-      title: 'Кол-во',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 100,
-    },
-    {
-      title: 'Сумма',
-      dataIndex: 'total_price',
-      key: 'total_price',
-      width: 130,
-      render: (value) => (
-        <span style={{ fontWeight: 'bold', color: '#52c41a' }}>
-          {value} ₽
-        </span>
-      ),
-    },
-  ];
+  },
+];
 
   // Колонки для таблицы пополнений
   const replenishmentColumns = [
@@ -250,17 +262,17 @@ const totalRevenue = totalSales + totalReplenishments;
         </span>
       ),
       children: (
-        <Table
-          columns={salesColumns}
-          dataSource={filteredSales}
-          rowKey="id"
-          pagination={{ 
-            pageSize: 10, 
-            showSizeChanger: true,
-            showTotal: (total) => `Всего ${total} записей`
-          }}
-          scroll={{ x: 600 }}
-        />
+<Table
+  columns={salesColumns}
+  dataSource={filteredSales}
+  rowKey="id"
+  pagination={{ 
+    pageSize: 10, 
+    showSizeChanger: true,
+    showTotal: (total) => `Всего ${total} записей`
+  }}
+  scroll={{ x: 750 }}  // ← Увеличили ширину
+/>
       ),
     },
     {
