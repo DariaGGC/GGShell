@@ -156,16 +156,7 @@ npm run build
 
 ---
 
-## 📄 Лицензия
+## 🏗 Архитектура
 
-MIT
-
----
-
-## 🔵 Коммит
-
-```bash
-git add README.md
-git commit -m "docs: add project README"
-git push
-```
+Подробное описание архитектуры проекта доступно здесь:  
+👉 [ARCHITECTURE.md](./ARCHITECTURE.md)
