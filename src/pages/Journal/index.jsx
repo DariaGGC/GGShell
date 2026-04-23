@@ -134,7 +134,7 @@ function JournalPage() {
       label: <span><ShoppingCartOutlined /> Продажи ({filteredSales.length})</span>,
       children: (
         <Table columns={salesColumns} dataSource={filteredSales} rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: t => `Всего ${t} записей` }}
+          pagination={{ pageSize: 15, showTotal: t => `Всего ${t} записей` }}
           scroll={{ x: 750 }} />
       )
     },
@@ -143,7 +143,7 @@ function JournalPage() {
       label: <span><WalletOutlined /> Пополнения ({filteredReplenishments.length})</span>,
       children: (
         <Table columns={replenishmentColumns} dataSource={filteredReplenishments} rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: t => `Всего ${t} записей` }}
+          pagination={{ pageSize: 15, showTotal: t => `Всего ${t} записей` }}
           scroll={{ x: 600 }} />
       )
     },
@@ -152,7 +152,7 @@ function JournalPage() {
       label: <span><HistoryOutlined /> Сессии ({filteredSessions.length})</span>,
       children: (
         <Table columns={sessionsColumns} dataSource={filteredSessions} rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: t => `Всего ${t} записей` }}
+          pagination={{ pageSize: 15, showTotal: t => `Всего ${t} записей` }}
           scroll={{ x: 800 }} />
       )
     }
@@ -180,13 +180,13 @@ function JournalPage() {
 
       <Row gutter={16} className="journal-stats">
         <Col span={8}>
-          <Card><Statistic title="Общая выручка" value={totalRevenue} suffix="₽" prefix={<ShoppingCartOutlined />} styles={{ content: { color: '#52c41a' } }} /></Card>
+          <Card bodyStyle={{ padding: '6px 16px' }}><Statistic title="Общая выручка" value={totalRevenue} suffix="₽" prefix={<ShoppingCartOutlined />} styles={{ content: { color: '#52c41a' } }} /></Card>
         </Col>
         <Col span={8}>
-          <Card><Statistic title="Выручка от продаж" value={totalSales} suffix="₽" prefix={<ShoppingCartOutlined />} /></Card>
+          <Card bodyStyle={{ padding: '6px 16px' }}><Statistic title="Выручка от продаж" value={totalSales} suffix="₽" prefix={<ShoppingCartOutlined />} /></Card>
         </Col>
         <Col span={8}>
-          <Card><Statistic title="Пополнения баланса" value={totalReplenishments} suffix="₽" prefix={<WalletOutlined />} styles={{ content: { color: '#1677ff' } }} /></Card>
+          <Card bodyStyle={{ padding: '6px 16px' }}><Statistic title="Пополнения баланса" value={totalReplenishments} suffix="₽" prefix={<WalletOutlined />} styles={{ content: { color: '#1677ff' } }} /></Card>
         </Col>
       </Row>
 

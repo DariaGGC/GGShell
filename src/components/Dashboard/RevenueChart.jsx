@@ -138,7 +138,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
         </div>
       }
       extra={
-        <Space>
+        <div className="chart-extra">
           {mode === 'preset' ? (
             <>
               <Radio.Group value={period} onChange={e => setPeriod(e.target.value)} size="small" buttonStyle="solid">
@@ -150,6 +150,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
                 locale={locale}
                 format="DD.MM.YYYY"
                 placeholder={['Начало', 'Конец']}
+                width={'20x'}
                 onChange={(dates) => {
                   if (dates) {
                     setCustomRange(dates);
@@ -161,7 +162,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
               />
             </>
           ) : (
-            <Space>
+            <div className="chart-extra">
               <RangePicker
                 locale={locale}
                 value={customRange}
@@ -170,9 +171,9 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
                 size="small"
               />
               <Button size="small" onClick={() => setMode('preset')}>Сбросить</Button>
-            </Space>
+            </div>
           )}
-        </Space>
+        </div>
       }
       className="revenue-card"
     >

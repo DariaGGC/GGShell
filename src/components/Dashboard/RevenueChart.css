@@ -74,3 +74,62 @@
 .tooltip-total span:last-child {
   color: #389e0d;
 }
+
+.chart-extra {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 869px) {
+  .chart-extra {
+    flex-direction: column;
+    width: 100%;
+    margin: 12px
+  }
+
+  .chart-extra .ant-space {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .chart-extra .ant-space-item {
+    width: 100%;
+  }
+
+  .chart-range-picker {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chart-extra {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chart-range-picker {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 1220px) {
+ .recharts-legend-wrapper {
+  display: flex;
+  width: 100%;
+  bottom: -20px;
+ }
+ @media (max-width: 991px) {
+  .recharts-legend-wrapper {
+    justify-content: center;
+  }
+}
+}

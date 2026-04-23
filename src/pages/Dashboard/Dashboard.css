@@ -24,6 +24,10 @@
 
 .revenue-main {
   flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .revenue-header {
@@ -106,7 +110,14 @@
 
 .users-total {
   text-align: center;
-  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  white-space: nowrap;
+
 }
 
 .users-count {
@@ -155,6 +166,10 @@
   justify-content: space-between;
 }
 
+.user-footer-item {
+  text-align: center;
+}
+
 .footer-value {
   font-size: 16px;
   font-weight: 500;
@@ -195,3 +210,87 @@
   flex-direction: column;
   align-items: center;
 }
+
+@media (max-width: 767px) {
+  .dashboard-page .dashboard-title {
+    margin-bottom: 16px;
+    font-size: 24px;
+  }
+
+  .revenue-block {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .revenue-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .revenue-yesterday {
+    min-width: unset;
+  }
+
+  .users-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .users-activity {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .users-new {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .users-footer {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+
+
+  .users-block {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+@media (max-width: 1400px) {
+  .ant-card .ant-card-head-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 8px !important;
+  }
+  .ant-card-extra {
+    margin: 8px auto;
+  }
+  	.chart-extra {
+		align-items: center;
+  }
+}
+
+@media (max-width: 1124px) {
+ .chart-extra {
+  display: flex;
+  flex-direction: column;
+ }
+
+ @media (max-width: 991px) {
+  .ant-col-xs-24 {
+    
+  }
+  .dashboard-page .dashboard-middle-row {
+    margin-bottom: 0px;
+  }
+}
+}
+
+

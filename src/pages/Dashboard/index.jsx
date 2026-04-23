@@ -279,7 +279,7 @@ function DashboardPage() {
                       title={<span><RiseOutlined /> Выручка сегодня</span>}
                       value={todayTotal}
                       suffix="₽"
-                      valueStyle={{ color: '#389e0d', fontWeight: 700 }}
+                      valueStyle={{ color: '#389e0d', fontWeight: 700, whiteSpace: 'nowrap', }}
                     />
                     <span className={`revenue-change ${revenueChange >= 0 ? 'positive' : 'negative'}`}>
                       {revenueChange >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />} {Math.abs(revenueChange)}%
@@ -368,11 +368,11 @@ function DashboardPage() {
                 </div>
 
                 <div className="users-footer">
-                  <div>
+                  <div className='user-footer-item'>
                     <Text type="secondary">🕐 Последняя регистрация</Text>
                     <div className="footer-value">{lastRegistration}</div>
                   </div>
-                  <div>
+                  <div className='user-footer-item'>
                     <Text type="secondary">💰 Средний депозит активных</Text>
                     <div className="footer-value deposit">{avgActiveDeposit.toLocaleString()} ₽</div>
                   </div>
