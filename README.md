@@ -9,7 +9,7 @@
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone https://github.com/your-username/ggshell.git
+git clone https://github.com/DariaGGC/GGShell.git
 cd ggshell
 ```
 
