@@ -1,0 +1,14 @@
+.users-page .users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.users-page .users-stats {
+  margin-bottom: 24px;
+}
+
+.users-page .users-filters {
+  margin-bottom: 16px;
+}

@@ -1,51 +1,29 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Table,
-  Tag,
-  Button,
-  Input,
-  Select,
-  Space,
-  Card,
-  Statistic,
-  Row,
-  Col,
-  Spin,
-  Alert,
-  Typography,
+  Table, Tag, Button, Input, Select, Space, Card,
+  Statistic, Row, Col, Spin, Alert, Typography
 } from 'antd';
 import {
-  ReloadOutlined,
-  SearchOutlined,
-  PlusOutlined,
-  WalletOutlined,
-  EditOutlined,
+  ReloadOutlined, SearchOutlined, PlusOutlined,
+  WalletOutlined, EditOutlined
 } from '@ant-design/icons';
 import {
-  fetchUsers,
-  fetchPaymentMethods,
-  topUpBalance,
-  setSearchText,
-  setFilterStatus,
+  fetchUsers, fetchPaymentMethods, topUpBalance,
+  setSearchText, setFilterStatus
 } from '../../store/slices/usersSlice';
 import TopUpModal from '../../components/Users/TopUpModal';
 import EditUserModal from '../../components/Users/EditUserModal';
 import AddUserModal from '../../components/Users/AddUserModal';
+import './Users.css';
 
 const { Title } = Typography;
 const { Option } = Select;
 
 function UsersPage() {
   const dispatch = useDispatch();
-  const {
-    items: users,
-    paymentMethods,
-    isLoading,
-    error,
-    searchText,
-    filterStatus,
-  } = useSelector(state => state.users);
+  const { items: users, paymentMethods, isLoading, error, searchText, filterStatus } =
+    useSelector(state => state.users);
 
   const [topUpModalVisible, setTopUpModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -58,10 +36,8 @@ function UsersPage() {
     dispatch(fetchPaymentMethods());
   }, [dispatch]);
 
-  // Фильтрация пользователей
   const filteredUsers = useMemo(() => {
     let filtered = users;
-
     if (searchText) {
       const search = searchText.toLowerCase();
       filtered = filtered.filter(user =>
@@ -72,24 +48,18 @@ function UsersPage() {
         user.firstName?.toLowerCase().includes(search)
       );
     }
-
     if (filterStatus === 'authorized') {
       filtered = filtered.filter(user => user.activeSession !== null);
     } else if (filterStatus === 'unauthorized') {
       filtered = filtered.filter(user => user.activeSession === null);
     }
-
     return filtered;
   }, [users, searchText, filterStatus]);
 
-  // Статистика
   const stats = useMemo(() => {
     const total = users.length;
     const today = new Date().toISOString().split('T')[0];
-    const todayRegistrations = users.filter(u => 
-      u.created_at?.startsWith(today)
-    ).length;
-
+    const todayRegistrations = users.filter(u => u.created_at?.startsWith(today)).length;
     return { total, todayRegistrations };
   }, [users]);
 
@@ -103,94 +73,45 @@ function UsersPage() {
   };
 
   const handleEditUser = (user) => {
-    console.log('Edit user clicked:', user); // Для отладки
     setSelectedUserForEdit(user);
     setEditModalVisible(true);
   };
 
-  // Колонки таблицы
   const columns = [
+    { title: 'Логин', dataIndex: 'login', key: 'login', width: 130 },
     {
-      title: 'Логин',
-      dataIndex: 'login',
-      key: 'login',
-      width: 130,
-      sorter: (a, b) => a.login.localeCompare(b.login),
+      title: 'ФИО', key: 'fullName', width: 180,
+      render: (_, record) => {
+        const name = [record.lastName, record.firstName].filter(Boolean).join(' ');
+        return name || record.name || '—';
+      },
     },
+    { title: 'Телефон', dataIndex: 'phone', key: 'phone', width: 150, render: (phone) => phone || '—' },
     {
-    title: 'ФИО',
-    key: 'fullName',
-    width: 180,
-    render: (_, record) => {
-        return record.name || '—';
-    },
-    },
-    {
-      title: 'Телефон',
-      dataIndex: 'phone',
-      key: 'phone',
-      width: 150,
-      render: (phone) => phone || '—',
-    },
-    {
-      title: 'Баланс',
-      dataIndex: 'balance',
-      key: 'balance',
-      width: 110,
-      sorter: (a, b) => a.balance - b.balance,
+      title: 'Баланс', dataIndex: 'balance', key: 'balance', width: 110,
       render: (balance) => {
-        let color = '#52c41a';
-        if (balance < 0) color = '#ff4d4f';
-        else if (balance === 0) color = '#faad14';
-        return (
-          <span style={{ color, fontWeight: 'bold' }}>
-            {balance || 0} ₽
-          </span>
-        );
+        let color = balance > 0 ? '#52c41a' : balance < 0 ? '#ff4d4f' : '#faad14';
+        return <span style={{ color, fontWeight: 'bold' }}>{balance || 0} ₽</span>;
       },
     },
     {
-      title: 'Статус',
-      key: 'status',
-      width: 130,
-      render: (_, record) => {
-        if (record.activeSession) {
-          return <Tag color="processing">Авторизован</Tag>;
-        }
-        return <Tag color="default">Не авторизован</Tag>;
-      },
+      title: 'Статус', key: 'status', width: 130,
+      render: (_, record) => (
+        record.activeSession ? <Tag color="processing">Авторизован</Tag> : <Tag color="default">Не авторизован</Tag>
+      ),
     },
     {
-      title: '№ ПК',
-      key: 'computer',
-      width: 80,
-      render: (_, record) => {
-        if (record.activeSession) {
-          return <Tag color="blue">{record.activeSession.computers?.number}</Tag>;
-        }
-        return '—';
-      },
+      title: '№ ПК', key: 'computer', width: 80,
+      render: (_, record) => record.activeSession ? <Tag color="blue">{record.activeSession.computers?.number}</Tag> : '—',
     },
     {
-      title: 'Действия',
-      key: 'actions',
-      width: 150,
-      fixed: 'right',
+      title: 'Действия', key: 'actions', width: 150, fixed: 'right',
       render: (_, record) => (
         <Space>
-          <Button
-            type="primary"
-            size="small"
-            icon={<WalletOutlined />}
-            onClick={() => handleTopUp(record)}
-          >
+          <Button type="primary" size="small" icon={<WalletOutlined />} onClick={() => handleTopUp(record)}>
             Пополнить
           </Button>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEditUser(record)}
-          />
+          <Button size="small" icon={<EditOutlined />} onClick={() => handleEditUser(record)} />
         </Space>
       ),
     },
@@ -198,67 +119,40 @@ function UsersPage() {
 
   if (error) {
     return (
-      <Alert
-        message="Ошибка загрузки"
-        description={error}
-        type="error"
-        showIcon
-        action={
-          <Button size="small" onClick={() => dispatch(fetchUsers())}>
-            Повторить
-          </Button>
-        }
-      />
+      <Alert message="Ошибка загрузки" description={error} type="error" showIcon
+        action={<Button size="small" onClick={() => dispatch(fetchUsers())}>Повторить</Button>} />
     );
   }
 
   return (
-    <div>
-      {/* Заголовок */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <Title level={2} style={{ margin: 0 }}>👥 Пользователи</Title>
+    <div className="users-page">
+      <div className="users-header">
+        <Title level={2}>👥 Пользователи</Title>
         <Space>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={() => dispatch(fetchUsers())}
-            loading={isLoading}
-          >
+          <Button icon={<ReloadOutlined />} onClick={() => dispatch(fetchUsers())} loading={isLoading}>
             Обновить
           </Button>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={() => setAddModalVisible(true)}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setAddModalVisible(true)}>
             Добавить
           </Button>
         </Space>
       </div>
 
-      {/* Статистика */}
-<Row gutter={16} style={{ marginBottom: 24 }}>
-  <Col span={12}>
-    <Card bodyStyle={{ padding: '12px 16px' }}>
-      <Statistic 
-        title="Всего пользователей" 
-        value={stats.total} 
-        valueStyle={{ fontSize: 24 }} 
-      />
-    </Card>
-  </Col>
-  <Col span={12}>
-    <Card bodyStyle={{ padding: '12px 16px' }}>
-      <Statistic 
-        title="Регистраций за сегодня" 
-        value={stats.todayRegistrations}
-        valueStyle={{ color: '#52c41a', fontSize: 24 }}
-      />
-    </Card>
-  </Col>
-</Row>
+      <Row gutter={16} className="users-stats">
+        <Col span={12}>
+          <Card bodyStyle={{ padding: '6px 16px' }}>
+            <Statistic title="Всего пользователей" value={stats.total} />
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card bodyStyle={{ padding: '6px 16px' }}>
+            <Statistic title="Регистраций за сегодня" value={stats.todayRegistrations}
+              valueStyle={{ color: '#52c41a' }} />
+          </Card>
+        </Col>
+      </Row>
 
-      {/* Фильтры и поиск */}
-      <Card style={{ marginBottom: 16 }}>
+      <Card className="users-filters">
         <Space wrap>
           <Input
             placeholder="Поиск по логину, ФИО, телефону"
@@ -282,49 +176,31 @@ function UsersPage() {
         </Space>
       </Card>
 
-      {/* Таблица пользователей */}
       <Card>
         <Spin spinning={isLoading}>
           <Table
             columns={columns}
             dataSource={filteredUsers}
             rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Всего ${total} пользователей`,
-            }}
+              pagination={{
+                total: filteredUsers.length,
+                pageSize: 20,
+                showTotal: (total) => `Всего ${total} пользователей`,
+              }}
             scroll={{ x: 1000 }}
             size="middle"
           />
         </Spin>
       </Card>
 
-      {/* Модальные окна */}
-      <TopUpModal
-        visible={topUpModalVisible}
-        user={selectedUser}
-        paymentMethods={paymentMethods}
-        onClose={() => {
-          setTopUpModalVisible(false);
-          setSelectedUser(null);
-        }}
-        onSubmit={handleTopUpSubmit}
-      />
+      <TopUpModal visible={topUpModalVisible} user={selectedUser} paymentMethods={paymentMethods}
+        onClose={() => { setTopUpModalVisible(false); setSelectedUser(null); }}
+        onSubmit={handleTopUpSubmit} />
 
-      <EditUserModal
-        visible={editModalVisible}
-        user={selectedUserForEdit}
-        onClose={() => {
-          setEditModalVisible(false);
-          setSelectedUserForEdit(null);
-        }}
-      />
+      <EditUserModal visible={editModalVisible} user={selectedUserForEdit}
+        onClose={() => { setEditModalVisible(false); setSelectedUserForEdit(null); }} />
 
-      <AddUserModal
-        visible={addModalVisible}
-        onClose={() => setAddModalVisible(false)}
-      />
+      <AddUserModal visible={addModalVisible} onClose={() => setAddModalVisible(false)} />
     </div>
   );
 }
