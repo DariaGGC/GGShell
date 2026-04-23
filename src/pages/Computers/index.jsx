@@ -287,17 +287,17 @@ function ComputersPage() {
 
       <Row gutter={16} className="stats-row">
         <Col span={8}>
-          <Card bodyStyle={{ padding: '12px 16px' }}>
+          <Card bodyStyle={{ padding: '6px 16px' }}>
             <Statistic title="Свободно" value={stats.free} valueStyle={{ color: '#52c41a', fontSize: 24 }} />
           </Card>
         </Col>
         <Col span={8}>
-          <Card bodyStyle={{ padding: '12px 16px' }}>
+          <Card bodyStyle={{ padding: '6px 16px' }}>
             <Statistic title="Занято" value={stats.occupied} valueStyle={{ color: '#1677ff', fontSize: 24 }} />
           </Card>
         </Col>
         <Col span={8}>
-          <Card bodyStyle={{ padding: '12px 16px' }}>
+          <Card bodyStyle={{ padding: '6px 16px' }}>
             <Statistic title="Обслуживание" value={stats.maintenance} valueStyle={{ color: '#faad14', fontSize: 24 }} />
           </Card>
         </Col>

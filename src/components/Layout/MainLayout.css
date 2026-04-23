@@ -1,5 +1,6 @@
 .layout-wrapper {
   max-width: 1900px;
+  min-width: 1630px;
   margin: auto;
   width: 100%;
 }

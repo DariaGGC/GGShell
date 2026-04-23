@@ -130,7 +130,7 @@ export default function RevenueChart({ sales = [], replenishments = [], period, 
       title={
         <div className="chart-header">
           <Space>
-            <Title level={4} className="chart-title">📊 Доходы</Title>
+            <Title level={4} className="chart-title" style={{margin: '0'}}>📊 Доходы</Title>
             <Tag color="green" className="chart-total-tag">
               {totalRevenue.toLocaleString()} ₽
             </Tag>

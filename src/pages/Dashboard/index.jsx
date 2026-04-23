@@ -413,9 +413,9 @@ function DashboardPage() {
               <div className="zone-popularity">
                 <Text type="secondary">📊 Популярность сегодня ({zonePopularity.total} сессий)</Text>
                 <div className="popularity-items">
-                  <div className="popularity-item"><Tag color="blue">Стандарт</Tag><strong>{zonePopularity[1].sessions}</strong><Text type="secondary">{zonePopularity[1].percent}%</Text></div>
-                  <div className="popularity-item"><Tag color="gold">VIP</Tag><strong>{zonePopularity[2].sessions}</strong><Text type="secondary">{zonePopularity[2].percent}%</Text></div>
-                  <div className="popularity-item"><Tag color="green">Буткемп</Tag><strong>{zonePopularity[3].sessions}</strong><Text type="secondary">{zonePopularity[3].percent}%</Text></div>
+                  <div className="popularity-item"><Tag color="blue">Стандарт</Tag><Text type="secondary">{zonePopularity[1].percent}%</Text></div>
+                  <div className="popularity-item"><Tag color="gold">VIP</Tag><Text type="secondary">{zonePopularity[2].percent}%</Text></div>
+                  <div className="popularity-item"><Tag color="green">Буткемп</Tag><Text type="secondary">{zonePopularity[3].percent}%</Text></div>
                 </div>
               </div>
             </Card>

@@ -18,7 +18,7 @@
 
 .revenue-block {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px;
 }
 
@@ -72,6 +72,7 @@
 
 .revenue-yesterday {
   min-width: 120px;
+
 }
 
 .yesterday-label {
@@ -137,6 +138,7 @@
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  justify-content: space-around;
 }
 
 .new-item {
@@ -147,15 +149,16 @@
 
 .users-footer {
   margin-top: 16px;
-  padding-top: 12px;
+  padding-top: 32px;
   border-top: 1px solid #f0f0f0;
   display: flex;
   justify-content: space-between;
 }
 
 .footer-value {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
+  text-align: center
 }
 
 .footer-value.deposit { color: #1677ff; }
@@ -188,5 +191,7 @@
 }
 
 .popularity-item {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
